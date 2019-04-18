@@ -24,15 +24,39 @@ const TitleMovieTab = 'Home';
 const TitleConfigTab = 'More';
 const TitleSearchTab = 'Search';
 const TitleWebView = 'Trailer';
+const TitleChallengeTab = 'Challenges';
 
-const MoviesTab = createStackNavigator(
+const Login = createStackNavigator(
   {
     Login: {
       screen: LoginScreen
-    },
+    }
+  }
+);
+
+const ChallengeTab = createStackNavigator(
+  {
     ChallengeList: {
-      screen: ChallengeListScreen
-    },
+      screen: ChallengeListScreen,
+      navigationOptions: {
+        title: TitleChallengeTab,
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
+      }
+    }
+  }
+);
+
+ChallengeTab.navigationOptions = {
+  tabBarIcon: ({ tintColor }) => (
+    <Feather name="home" size={20} color={tintColor} />
+  )
+};
+
+const MoviesTab = createStackNavigator(
+  {
     MovieList: {
       screen: MovieListScreen,
       navigationOptions: {
@@ -64,7 +88,7 @@ const MoviesTab = createStackNavigator(
     }
   },
   {
-    initialRouteName: 'Login'
+    initialRouteName: 'MovieList'
   }
 );
 
@@ -183,6 +207,13 @@ const MainNavigator =
               tabBarVisible: MovieListTabBarVisible(navigation)
             })
           },
+          Challenges: {
+            screen: ChallengeTab,
+            navigationOptions: ({ navigation }) => ({
+              title: TitleChallengeTab,
+              tabBarVisible: MovieListTabBarVisible(navigation)
+            })
+          },
           Config: {
             screen: ConfigurationTab,
             navigationOptions: {
@@ -223,6 +254,13 @@ const MainNavigator =
               tabBarVisible: MovieListTabBarVisible(navigation)
             })
           },
+          Challenges: {
+            screen: ChallengeTab,
+            navigationOptions: ({ navigation }) => ({
+              title: TitleChallengeTab,
+              tabBarVisible: MovieListTabBarVisible(navigation)
+            })
+          },
           Config: {
             screen: ConfigurationTab,
             navigationOptions: {
@@ -245,10 +283,11 @@ const MainNavigator =
 
 const AppNavigator = createSwitchNavigator(
   {
+    Login,
     Main: MainNavigator
   },
   {
-    initialRouteName: 'Main'
+    initialRouteName: 'Login'
   }
 );
 

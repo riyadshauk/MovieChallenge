@@ -51,7 +51,7 @@ export default class LoginScreen extends React.Component {
     // @ts-ignore
     for (let i = 0; i < users.length; i += 1) {
       if (email === users[i].email) {
-        return navigate('ChallengeList', { email });
+        return navigate('Main', { email });
       }
     }
     return this.setState({ invalidEmailSubmitted: true });
