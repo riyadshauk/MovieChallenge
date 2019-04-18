@@ -63,11 +63,11 @@ export default class ChallengeListScreen extends React.Component {
     }
   }
 
-  getUserChallenges = (challengeJson) => {
+  getUserChallenges = challengeJson => {
     const { email, challengeList } = this.state;
 
     // loop through all the challenges to find the list for currentUser
-    challengeJson.items.forEach(async (item) => {
+    challengeJson.items.forEach(async item => {
       if (largest < item.challengeid) {
         largest = item.challengeid;
       }
@@ -78,7 +78,7 @@ export default class ChallengeListScreen extends React.Component {
         const options = {
           method: 'GET',
           json: true,
-          headers,
+          headers
         };
         const response = await fetch(getuserurl, options);
         const responseJson = response.json();
