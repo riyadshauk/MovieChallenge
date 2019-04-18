@@ -11,8 +11,9 @@ import { darkBlue } from '../../styles/Colors';
 
 import styles from './styles';
 
-import request from '../../services/Api';
 import MovieListScreen from '../../screens/MovieListScreen';
+
+import config from '../../../config';
 
 export default class ChallengeList extends MovieListScreen {
   static navigationOptions = ({ navigation }) => {
@@ -35,7 +36,8 @@ export default class ChallengeList extends MovieListScreen {
     this.state = {
       ...this.state,
       challengeList: [],
-      email: ''
+      email: '',
+      currentUserID: 2
     };
   }
 
@@ -69,35 +71,26 @@ export default class ChallengeList extends MovieListScreen {
     try {
       this.setState({ isLoading: true });
 
-      const { page, filterType, hasAdultContent } = this.state;
-      const dateRelease = new Date().toISOString().slice(0, 10);
-
       // get all the challenges for the user
-      // await getChallengeList();
+      await this.getChallengeList();
 
       // loop through each challenge and get each movie detail from tmdb
-      // this.state.challengeList.forEach(challenge => {
+      for await (const challenge of this.state.challengeList) {
+        const data = await fetch(
+          `https://api.themoviedb.org/3/movie/${
+            challenge.movieID
+          }?api_key=024d69b581633d457ac58359146c43f6`
+        );
+        challenge.movie = await data.json();
+      }
 
-      // });
-
-      const data = await request('discover/movie', {
-        page,
-        'release_date.lte': dateRelease,
-        sort_by: filterType,
-        with_release_type: '1|2|3|4|5|6|7',
-        include_adult: hasAdultContent
-      });
-
-      // console.log('------------------------------------------');
-      // console.log(data);
-
-      this.setState(({ isRefresh, results }) => ({
+      this.setState(({ isRefresh, results, challengeList }) => ({
         isLoading: false,
         isRefresh: false,
         isLoadingMore: false,
         isError: false,
-        totalPages: data.total_pages,
-        results: isRefresh ? data.results : [...results, ...data.results]
+        // totalPages: data.total_pages,
+        results: isRefresh ? challengeList : results
       }));
     } catch (err) {
       this.setState({
@@ -117,7 +110,6 @@ export default class ChallengeList extends MovieListScreen {
       json: true
     };
 
-    // console.log(options);
     const response = await fetch(
       `${config.baseURL} /mobile/custom/Ash_SKy/ChallengeList`,
       options
@@ -125,44 +117,19 @@ export default class ChallengeList extends MovieListScreen {
     const responseJson = await response.json();
 
     // challengeList - find the challenges for the logged in user
-    if (responseJson == null || responseJson === undefined) {
-      await AsyncStorage.setItem('largestChallengeId', '1');
-      // console.log('No data returned');
-    } else {
-      // console.log('data returned', responseJson);
+    if (responseJson !== null || responseJson !== undefined) {
       await this.getUserChallenges(responseJson);
     }
   };
 
   // filter to get the specific user challenges
   getUserChallenges = challengeJson => {
-    const { email, challengeList } = this.state;
+    const { currentUserID, challengeList } = this.state;
 
     // loop through all the challenges to find the list for currentUser
     challengeJson.items.forEach(async item => {
-      if (largest < item.challengeid) {
-        largest = item.challengeid;
-      }
-
-      if (email === item.challengerid && item.status === 0) {
-        // call to get the challenger user (I think so)
-        const getuserurl = `${config.baseURL} /mobile/custom/Ash_SKy/GetUser/ ${
-          item.userid
-        }`;
-        const options = {
-          method: 'GET',
-          json: true,
-          headers
-        };
-        const response = await fetch(getuserurl, options);
-        const responseJson = response.json();
-
-        // eslint-disable-next-line no-param-reassign
-        item.email = responseJson.items[0].email;
-
-        // update challengelist for currentUser
+      if (currentUserID === item.recipientID && !item.accepted)
         challengeList.push(item);
-      }
     });
   };
 }
