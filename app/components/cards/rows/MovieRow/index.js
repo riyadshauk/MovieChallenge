@@ -12,6 +12,7 @@ import { width } from '../../../../utils/Metrics';
 import { notFound } from '../../../../utils/StaticImages';
 
 import styles from './styles';
+import CreateChallengeButton from '../../../../challenge-components/CreateChallengeButton';
 
 const getImageApi = image =>
   image ? { uri: `https://image.tmdb.org/t/p/w500/${image}` } : notFound;
@@ -89,6 +90,7 @@ export default class MovieRow extends React.PureComponent {
               <View style={[styles.textRow, styles.containerReview]}>
                 {renderScore(item.vote_average)}
               </View>
+              <CreateChallengeButton movieID={item.id} />
             </View>
           </View>
         </TouchableOpacity>

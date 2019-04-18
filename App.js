@@ -19,12 +19,14 @@ import WebViewScreen from './app/screens/WebViewScreen';
 
 import LoginScreen from './app/challenge-screens/LoginScreen';
 import ChallengeListScreen from './app/challenge-screens/ChallengeListScreen';
+import CreateChallengeScreen from './app/challenge-screens/CreateChallengeScreen';
 
 const TitleMovieTab = 'Home';
 const TitleConfigTab = 'More';
 const TitleSearchTab = 'Search';
-const TitleWebView = 'Trailer';
 const TitleChallengeTab = 'Challenges';
+const TitleWebView = 'Trailer';
+const TitleCreateChallenge = 'Create a Challenge!';
 
 const Login = createStackNavigator({
   Login: {
@@ -37,6 +39,16 @@ const ChallengeTab = createStackNavigator({
     screen: ChallengeListScreen,
     navigationOptions: {
       title: TitleChallengeTab,
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  },
+  CreateChallenge: {
+    screen: CreateChallengeScreen,
+    navigationOptions: {
+      title: TitleCreateChallenge,
       headerTintColor: '#47525E',
       headerStyle: {
         backgroundColor: '#ffffff'

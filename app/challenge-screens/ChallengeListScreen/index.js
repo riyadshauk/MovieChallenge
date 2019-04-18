@@ -73,7 +73,7 @@ export default class ChallengeList extends MovieListScreen {
       const dateRelease = new Date().toISOString().slice(0, 10);
 
       // get all the challenges for the user
-      await getChallengeList();
+      // await getChallengeList();
 
       // loop through each challenge and get each movie detail from tmdb
       // this.state.challengeList.forEach(challenge => {
@@ -159,7 +159,6 @@ export default class ChallengeList extends MovieListScreen {
 
         // eslint-disable-next-line no-param-reassign
         item.email = responseJson.items[0].email;
-        console.log(item);
 
         // update challengelist for currentUser
         challengeList.push(item);

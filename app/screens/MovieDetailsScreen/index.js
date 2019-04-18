@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { ScrollView, View, Text } from 'react-native';
 
+// @ts-ignore
 import { Feather } from '@expo/vector-icons';
 import ReadMore from 'react-native-read-more-text';
 
@@ -18,6 +19,7 @@ import { TouchableOpacity } from '../../components/common/TouchableOpacity';
 
 import request from '../../services/Api';
 
+// @ts-ignore
 import language from '../../assets/language/iso.json';
 import { darkBlue } from '../../styles/Colors';
 
@@ -67,6 +69,7 @@ export default class MovieDetailsScreen extends Component {
     this.requestMoviesInfo();
   }
 
+  // @ts-ignore
   shouldComponentUpdate(nextProps, nextState) {
     if (
       this.state.isVisible !== nextState.isVisible ||
@@ -162,7 +165,9 @@ export default class MovieDetailsScreen extends Component {
   convertMinsToHrsMins = runtime => {
     let h = Math.floor(runtime / 60);
     let m = runtime % 60;
+    // @ts-ignore
     h = h < 10 ? `0${h}` : h;
+    // @ts-ignore
     m = m < 10 ? `0${m}` : m;
     return h && m ? `${h}h ${m}m` : uninformed;
   };
