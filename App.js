@@ -17,8 +17,8 @@ import SearchScreen from './app/screens/SearchScreen';
 import SearchResultsScreen from './app/screens/SearchResultsScreen';
 import WebViewScreen from './app/screens/WebViewScreen';
 
-import LoginScreen from './app/challenge-screens/LoginScreen/index';
-import ChallengeListScreen from './app/challenge-screens/ChallengeListScreen/index';
+import LoginScreen from './app/challenge-screens/LoginScreen';
+import ChallengeListScreen from './app/challenge-screens/ChallengeListScreen';
 
 const TitleMovieTab = 'Home';
 const TitleConfigTab = 'More';
@@ -26,28 +26,24 @@ const TitleSearchTab = 'Search';
 const TitleWebView = 'Trailer';
 const TitleChallengeTab = 'Challenges';
 
-const Login = createStackNavigator(
-  {
-    Login: {
-      screen: LoginScreen
-    }
+const Login = createStackNavigator({
+  Login: {
+    screen: LoginScreen
   }
-);
+});
 
-const ChallengeTab = createStackNavigator(
-  {
-    ChallengeList: {
-      screen: ChallengeListScreen,
-      navigationOptions: {
-        title: TitleChallengeTab,
-        headerTintColor: '#47525E',
-        headerStyle: {
-          backgroundColor: '#ffffff'
-        }
+const ChallengeTab = createStackNavigator({
+  ChallengeList: {
+    screen: ChallengeListScreen,
+    navigationOptions: {
+      title: TitleChallengeTab,
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
       }
     }
   }
-);
+});
 
 ChallengeTab.navigationOptions = {
   tabBarIcon: ({ tintColor }) => (
