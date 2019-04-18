@@ -207,6 +207,7 @@ export default class MovieListScreen extends Component {
   };
 
   render() {
+    console.log('MovieListScreen render invoked');
     const { navigate } = this.props.navigation;
     const {
       isLoading,
