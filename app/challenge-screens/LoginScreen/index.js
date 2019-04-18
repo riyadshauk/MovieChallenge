@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { AsyncStorage, View, Text } from 'react-native';
 import { RkTextInput, RkButton } from 'react-native-ui-kitten';
 import PropTypes from 'prop-types';
 
@@ -56,12 +56,18 @@ export default class LoginScreen extends React.Component {
     const { navigation } = this.props;
     const { navigate } = navigation;
     await users;
-    for (let i = 0; i < users.length; i += 1) {
-      if (email === users[i].email) {
-        return navigate('Main', { email, userID: users[i].userID });
+    let valid = false;
+    users.forEach(async user => {
+      if (email === user.email) {
+        valid = true;
+        await AsyncStorage.setItem('userID', String(user.id));
+        await AsyncStorage.setItem('email', email);
+        navigate('Main', { email, userID: user.userID });
       }
+    });
+    if (!valid) {
+      this.setState({ invalidEmailSubmitted: true });
     }
-    return this.setState({ invalidEmailSubmitted: true });
   };
 
   InvalidMessage = () => {

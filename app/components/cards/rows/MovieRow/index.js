@@ -90,7 +90,7 @@ export default class MovieRow extends React.PureComponent {
               <View style={[styles.textRow, styles.containerReview]}>
                 {renderScore(item.vote_average)}
               </View>
-              <CreateChallengeButton movieID={item.id} />
+              <CreateChallengeButton movieID={item.id} navigate={navigate} />
             </View>
           </View>
         </TouchableOpacity>
