@@ -222,7 +222,7 @@ export default class MovieListScreen extends Component {
       keyGrid
     } = this.state;
 
-    // console.log('movie results:', results);
+    console.log('movie, typeof results:', typeof results);
 
     return (
       <View style={styles.container}>

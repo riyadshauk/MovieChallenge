@@ -25,6 +25,9 @@ const convertToUpperCaseFirstLetter = value => {
 };
 
 const convertGenre = (arr, type, isSearch) => {
+  if (arr === undefined) {
+    return '';
+  }
   if (type === 'normal' || isSearch) {
     if (arr.length > 1) return `${genre[arr[0]].name}, ${genre[arr[1]].name}`;
     return arr.length !== 0 ? `${genre[arr[0]].name}` : '';

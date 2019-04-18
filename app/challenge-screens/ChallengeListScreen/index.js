@@ -67,6 +67,26 @@ export default class ChallengeList extends MovieListScreen {
     }
   }
 
+  updateResults = async () => {
+    return new Promise(resolve => {
+      this.state.results.forEach(async (challenge, idx) => {
+        const movieData = await fetch(
+          `https://api.themoviedb.org/3/movie/${
+            challenge.movieID
+          }?api_key=024d69b581633d457ac58359146c43f6`
+        );
+        const updatedChallenge = {
+          ...challenge,
+          ...(await movieData.json())
+        };
+        this.state.results[idx] = updatedChallenge;
+        if (this.state.results.length - 1 === idx) {
+          resolve();
+        }
+      });
+    });
+  };
+
   requestMoviesList = async () => {
     try {
       this.setState({ isLoading: true });
@@ -75,22 +95,17 @@ export default class ChallengeList extends MovieListScreen {
       await this.getChallengeList();
 
       // loop through each challenge and get each movie detail from tmdb
-      for await (const challenge of this.state.challengeList) {
-        const data = await fetch(
-          `https://api.themoviedb.org/3/movie/${
-            challenge.movieID
-          }?api_key=024d69b581633d457ac58359146c43f6`
-        );
-        challenge.movie = await data.json();
-      }
+      // for await (let challenge of this.state.results) {
 
-      this.setState(({ isRefresh, results, challengeList }) => ({
+      await this.updateResults();
+
+      // }
+
+      this.setState(({ isRefresh }) => ({
         isLoading: false,
-        isRefresh: false,
+        isRefresh,
         isLoadingMore: false,
-        isError: false,
-        // totalPages: data.total_pages,
-        results: isRefresh ? challengeList : results
+        isError: false
       }));
     } catch (err) {
       this.setState({
@@ -124,12 +139,16 @@ export default class ChallengeList extends MovieListScreen {
 
   // filter to get the specific user challenges
   getUserChallenges = challengeJson => {
-    const { currentUserID, challengeList } = this.state;
+    const { currentUserID } = this.state;
 
     // loop through all the challenges to find the list for currentUser
     challengeJson.items.forEach(async item => {
       if (currentUserID === item.recipientID && !item.accepted)
-        challengeList.push(item);
+        // results.push(item);
+        this.setState(prevState => ({
+          ...prevState,
+          results: [...prevState.results, item]
+        }));
     });
   };
 }
