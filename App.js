@@ -17,6 +17,9 @@ import SearchScreen from './app/screens/SearchScreen';
 import SearchResultsScreen from './app/screens/SearchResultsScreen';
 import WebViewScreen from './app/screens/WebViewScreen';
 
+import LoginScreen from './app/challenge-screens/LoginScreen/index';
+import ChallengeListScreen from './app/challenge-screens/ChallengeListScreen/index';
+
 const TitleMovieTab = 'Home';
 const TitleConfigTab = 'More';
 const TitleSearchTab = 'Search';
@@ -24,6 +27,12 @@ const TitleWebView = 'Trailer';
 
 const MoviesTab = createStackNavigator(
   {
+    Login: {
+      screen: LoginScreen
+    },
+    ChallengeList: {
+      screen: ChallengeListScreen
+    },
     MovieList: {
       screen: MovieListScreen,
       navigationOptions: {
@@ -55,7 +64,7 @@ const MoviesTab = createStackNavigator(
     }
   },
   {
-    initialRouteName: 'MovieList'
+    initialRouteName: 'Login'
   }
 );
 

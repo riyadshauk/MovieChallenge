@@ -18,6 +18,7 @@ import { getItem } from '../../utils/AsyncStorage';
 import { darkBlue } from '../../styles/Colors';
 
 import styles from './styles';
+// import console = require('console');
 
 export default class MovieListScreen extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -219,6 +220,8 @@ export default class MovieListScreen extends Component {
       numColumns,
       keyGrid
     } = this.state;
+
+    console.log('movie results:', results);
 
     return (
       <View style={styles.container}>

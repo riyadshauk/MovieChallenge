@@ -59,3 +59,6 @@ typings/
 
 # expo
 .expo
+
+# Challenge
+config.js
