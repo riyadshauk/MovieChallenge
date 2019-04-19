@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 
 import config from '../../../config';
 import styles from './styles';
+import makeCancelable from '../../utils/makeCancelable';
 
 const { headers } = config;
 
@@ -24,31 +25,53 @@ export default class LoginScreen extends React.Component {
   state = {
     email: '',
     users: [],
+    fetchUsersRequest: undefined,
     invalidEmailSubmitted: false
   };
 
   async componentDidMount() {
-    this.setState({ users: await this.fetchUsers() });
+    this.setState({ fetchUsersRequest: await this.fetchUsers() });
+  }
+
+  /**
+   * @see https://www.robinwieruch.de/react-warning-cant-call-setstate-on-an-unmounted-component/
+   * @see https://reactjs.org/blog/2015/12/16/ismounted-antipattern.html
+   */
+  componentWillUnmount() {
+    if (
+      this.state.createChallengeRequest &&
+      this.state.createChallengeRequest.cancel instanceof Function
+    ) {
+      this.state.createChallengeRequest.cancel();
+    }
+    // @ts-ignore
+    if (this.state.fetchUsersRequest.cancel instanceof Function) {
+      // @ts-ignore
+      this.state.fetchUsersRequest.cancel();
+    }
   }
 
   fetchUsers = () => {
-    return new Promise(async (resolve, reject) => {
-      const options = {
-        method: 'get',
-        headers,
-        json: true
-      };
-      try {
-        const response = await fetch(
-          `${config.baseURL}/mobile/custom/Ash_SKy/SkyGet`,
-          options
-        );
-        const { items } = await response.json();
-        resolve(items);
-      } catch (err) {
-        reject(err.stack);
-      }
-    });
+    return makeCancelable(
+      new Promise(async (resolve, reject) => {
+        const options = {
+          method: 'get',
+          headers,
+          json: true
+        };
+        try {
+          const response = await fetch(
+            `${config.baseURL}/mobile/custom/Ash_SKy/SkyGet`,
+            options
+          );
+          const { items } = await response.json();
+          this.setState({ users: items });
+          resolve(items);
+        } catch (err) {
+          reject(err.stack);
+        }
+      })
+    );
   };
 
   verifyValidEmail = async () => {

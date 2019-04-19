@@ -2,6 +2,7 @@ import React from 'react';
 import { Asset } from 'expo';
 
 import { Feather } from '@expo/vector-icons';
+// @ts-ignore
 import { Assets as StackAssets } from 'react-navigation-stack';
 
 import { TouchableOpacity } from '../../components/common/TouchableOpacity';
@@ -14,11 +15,15 @@ import styles from './styles';
 import MovieListScreen from '../../screens/MovieListScreen';
 
 import config from '../../../config';
+import makeCancelable from '../../utils/makeCancelable';
 
+/**
+ * @author Darshan Sapaliga
+ * @author Riyad Shauk
+ */
 export default class ChallengeList extends MovieListScreen {
   static navigationOptions = ({ navigation }) => {
     const params = navigation.state.params || {};
-
     return {
       headerRight: (
         <TouchableOpacity
@@ -37,118 +42,117 @@ export default class ChallengeList extends MovieListScreen {
       ...this.state,
       challengeList: [],
       email: '',
-      currentUserID: 2
+      currentUserID: 2,
+      fetchChallengeListRequest: undefined,
+      fetchChallengeMoviesRequest: undefined
     };
   }
 
   async componentDidMount() {
-    try {
-      const { navigation } = this.props;
+    const { navigation } = this.props;
+    Asset.loadAsync(StackAssets);
+    navigation.setParams({ actionFilter: this.actionFilter });
+    const hasAdultContent = await getItem('@ConfigKey', 'hasAdultContent');
+    this.setState({
+      hasAdultContent,
+      email: navigation.getParam('email', 'no-email-address-found@example.com')
+    });
+    this.createMoviesList();
+  }
 
-      Asset.loadAsync(StackAssets);
-      navigation.setParams({ actionFilter: this.actionFilter });
-
-      const hasAdultContent = await getItem('@ConfigKey', 'hasAdultContent');
-
-      this.setState(
-        {
-          hasAdultContent,
-          email: navigation.getParam(
-            'email',
-            'no-email-address-found@example.com'
-          )
-        },
-        () => {
-          this.requestMoviesList();
-        }
-      );
-    } catch (error) {
-      this.requestMoviesList();
+  /**
+   * @see https://www.robinwieruch.de/react-warning-cant-call-setstate-on-an-unmounted-component/
+   * @see https://reactjs.org/blog/2015/12/16/ismounted-antipattern.html
+   */
+  componentWillUnmount() {
+    if (
+      this.state.fetchChallengeListRequest &&
+      this.state.fetchChallengeListRequest.cancel instanceof Function
+    ) {
+      this.state.fetchChallengeListRequest.cancel();
+    }
+    // @ts-ignore
+    if (
+      this.state.fetchChallengeMoviesRequest &&
+      this.state.fetchChallengeMoviesRequest.cancel instanceof Function
+    ) {
+      // @ts-ignore
+      this.state.fetchChallengeMoviesRequest.cancel();
     }
   }
 
-  updateResults = async () => {
-    return new Promise(resolve => {
-      this.state.results.forEach(async (challenge, idx) => {
-        const movieData = await fetch(
-          `https://api.themoviedb.org/3/movie/${
-            challenge.movieID
-          }?api_key=024d69b581633d457ac58359146c43f6`
-        );
-        const updatedChallenge = {
-          ...challenge,
-          ...(await movieData.json())
-        };
-        this.state.results[idx] = updatedChallenge;
-        if (this.state.results.length - 1 === idx) {
-          resolve();
-        }
-      });
+  fetchChallengeMovies = () => {
+    return makeCancelable(
+      new Promise(async resolve => {
+        this.setState({ fetchChallengeListRequest: this.fetchChallengeList() });
+        const challengeList = await (await this.state.fetchChallengeListRequest)
+          .promise;
+        challengeList.forEach(async (challengeMovie, idx) => {
+          const movieData = await fetch(
+            `https://api.themoviedb.org/3/movie/${
+              challengeMovie.movieID
+            }?api_key=024d69b581633d457ac58359146c43f6`
+          );
+          const updatedChallengeMovie = {
+            ...challengeMovie,
+            ...(await movieData.json())
+          };
+          challengeList[idx] = updatedChallengeMovie;
+          if (challengeList.length - 1 === idx) {
+            resolve(challengeList);
+          }
+        });
+      })
+    );
+  };
+
+  createMoviesList = async () => {
+    this.setState({
+      isLoading: true,
+      fetchChallengeMoviesRequest: this.fetchChallengeMovies()
+    });
+    // eslint-disable-next-line react/no-access-state-in-setstate
+    const movies = await (await this.state.fetchChallengeMoviesRequest).promise;
+    this.setState({
+      isLoading: false,
+      isLoadingMore: false,
+      isError: false,
+      results: movies
     });
   };
 
-  requestMoviesList = async () => {
-    try {
-      this.setState({ isLoading: true });
-
-      // get all the challenges for the user
-      await this.getChallengeList();
-
-      // loop through each challenge and get each movie detail from tmdb
-      // for await (let challenge of this.state.results) {
-
-      await this.updateResults();
-
-      // }
-
-      this.setState(({ isRefresh }) => ({
-        isLoading: false,
-        isRefresh,
-        isLoadingMore: false,
-        isError: false
-      }));
-    } catch (err) {
-      this.setState({
-        isLoading: false,
-        isRefresh: false,
-        isLoadingMore: false,
-        isError: true
-      });
-    }
-  };
-
-  // api call to get all the challenges
-  getChallengeList = async () => {
-    const options = {
-      method: 'get',
-      headers: config.headers,
-      json: true
-    };
-
-    const response = await fetch(
-      `${config.baseURL} /mobile/custom/Ash_SKy/ChallengeList`,
-      options
+  fetchChallengeList = async () => {
+    return makeCancelable(
+      new Promise(async (resolve, reject) => {
+        const options = {
+          method: 'get',
+          headers: config.headers,
+          json: true
+        };
+        try {
+          const response = await (await fetch(
+            `${config.baseURL} /mobile/custom/Ash_SKy/ChallengeList`,
+            options
+          )).json();
+          resolve(this.filterChallenges(response.items));
+        } catch (err) {
+          reject(err.stack);
+        }
+      })
     );
-    const responseJson = await response.json();
-
-    // challengeList - find the challenges for the logged in user
-    if (responseJson !== null || responseJson !== undefined) {
-      await this.getUserChallenges(responseJson);
-    }
   };
 
-  // filter to get the specific user challenges
-  getUserChallenges = challengeJson => {
+  filterChallenges = challenges => {
     const { currentUserID } = this.state;
-
-    // loop through all the challenges to find the list for currentUser
-    challengeJson.items.forEach(async item => {
-      if (currentUserID === item.recipientID && !item.accepted)
-        // results.push(item);
-        this.setState(prevState => ({
-          ...prevState,
-          results: [...prevState.results, item]
-        }));
+    const seen = {};
+    return challenges.filter(challenge => {
+      // filter out duplicate challenges (same movie from multiple users)
+      if (seen[challenge.id]) {
+        return false;
+      }
+      seen[challenge.id] = true;
+      // filter out challenges that aren't intended for the current user
+      return currentUserID === challenge.recipientID && !challenge.accepted;
     });
   };
 }

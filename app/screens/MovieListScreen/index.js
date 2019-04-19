@@ -207,7 +207,6 @@ export default class MovieListScreen extends Component {
   };
 
   render() {
-    // console.log('MovieListScreen render invoked');
     const { navigate } = this.props.navigation;
     const {
       isLoading,
@@ -221,8 +220,6 @@ export default class MovieListScreen extends Component {
       numColumns,
       keyGrid
     } = this.state;
-
-    console.log('movie, typeof results:', typeof results);
 
     return (
       <View style={styles.container}>
