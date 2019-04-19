@@ -96,8 +96,8 @@ export default class ChallengeList extends MovieListScreen {
             }?api_key=024d69b581633d457ac58359146c43f6`
           );
           const updatedChallengeMovie = {
-            ...challengeMovie,
-            ...(await movieData.json())
+            ...(await movieData.json()),
+            ...challengeMovie
           };
           challengeList[idx] = updatedChallengeMovie;
           if (challengeList.length - 1 === idx) {

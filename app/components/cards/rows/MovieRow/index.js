@@ -64,7 +64,13 @@ export default class MovieRow extends React.PureComponent {
     if (numColumns === 1) {
       return (
         <TouchableOpacity
-          onPress={() => navigate('MovieDetails', { id: item.id })}
+          onPress={() =>
+            navigate('MovieDetails', {
+              id: item.movieID,
+              senderName: item.senderName,
+              challengeID: item.id
+            })
+          }
         >
           <View style={styles.containerItem}>
             <Image
@@ -86,14 +92,15 @@ export default class MovieRow extends React.PureComponent {
                     {convertToUpperCaseFirstLetter(item.original_language)}
                   </Text>
                 </View>
+                <Text numberOfLines={1} style={styles.textSmall}>
+                  {convertGenre(item.genre_ids, type, isSearch)}
+                </Text>
                 {item.senderName ? (
                   <Text numberOfLines={1} style={styles.textSmall}>
                     Challenged by: {item.senderName}
                   </Text>
                 ) : (
-                  <Text numberOfLines={1} style={styles.textSmall}>
-                    {convertGenre(item.genre_ids, type, isSearch)}
-                  </Text>
+                  <Text />
                 )}
               </View>
               <View style={[styles.textRow, styles.containerReview]}>

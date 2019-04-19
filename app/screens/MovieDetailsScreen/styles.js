@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { white, pink, blue } from '../../styles/Colors';
+import { white, pink, blue, darkBlue } from '../../styles/Colors';
 import { fontSizeResponsive } from '../../utils/Metrics';
 
 const styles = StyleSheet.create({
@@ -31,6 +31,17 @@ const styles = StyleSheet.create({
   bottomModal: {
     justifyContent: 'flex-end',
     margin: 0
+  },
+  buttonCompleted: {
+    alignItems: 'center',
+    backgroundColor: pink,
+    padding: 10
+  },
+  title: {
+    fontSize: fontSizeResponsive(2.6),
+    fontWeight: 'bold',
+    color: darkBlue,
+    marginBottom: 7
   }
 });
 

@@ -25,6 +25,8 @@ import { darkBlue } from '../../styles/Colors';
 
 import styles from './styles';
 
+import config from '../../../config';
+
 const uninformed = 'Uninformed';
 
 const renderTruncatedFooter = handlePress => (
@@ -61,7 +63,8 @@ export default class MovieDetailsScreen extends Component {
     isError: false,
     isVisible: false,
     showImage: false,
-    creditId: null
+    creditId: null,
+    challengeCompleted: false
   };
 
   componentDidMount() {
@@ -232,6 +235,34 @@ export default class MovieDetailsScreen extends Component {
     </View>
   );
 
+  completeChallenge = () => {
+    this.callPutChallenge();
+    this.setState({
+      challengeCompleted: true
+    });
+  };
+
+  callPutChallenge = async () => {
+    return new Promise(async (resolve, reject) => {
+      const options = {
+        method: 'put',
+        headers: config.headers,
+        json: true
+      };
+      try {
+        const response = await (await fetch(
+          `${config.baseURL} /mobile/custom/Ash_SKy/UpdateChal/${
+            this.props.navigation.state.params.challengeID
+          }`,
+          options
+        )).json();
+        resolve(response);
+      } catch (err) {
+        reject(err.stack);
+      }
+    });
+  };
+
   render() {
     const {
       isLoading,
@@ -285,6 +316,26 @@ export default class MovieDetailsScreen extends Component {
                   <Text style={styles.subTitleInfo}>{overview}</Text>
                 </ReadMore>
               </SectionRow>
+              {this.props.navigation.state.params.senderName ? (
+                <SectionRow title="">
+                  <TouchableOpacity
+                    style={styles.buttonCompleted}
+                    onPress={() => this.completeChallenge()}
+                  >
+                    <Text style={styles.title}> Mark as completed </Text>
+                  </TouchableOpacity>
+                </SectionRow>
+              ) : (
+                <Text />
+              )}
+              {this.state.challengeCompleted ? (
+                <Text>
+                  Challenge successfully completed! You receive a free deal,
+                  check your email!
+                </Text>
+              ) : (
+                <Text />
+              )}
               <SectionRow title="Main cast">
                 <PersonListRow
                   data={cast}
