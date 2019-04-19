@@ -85,6 +85,7 @@ export default class LoginScreen extends React.Component {
         valid = true;
         await AsyncStorage.setItem('userID', String(user.id));
         await AsyncStorage.setItem('email', email);
+        await AsyncStorage.setItem('name', user.Name);
         navigate('Main', { email, userID: user.userID });
       }
     });

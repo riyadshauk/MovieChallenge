@@ -86,9 +86,15 @@ export default class MovieRow extends React.PureComponent {
                     {convertToUpperCaseFirstLetter(item.original_language)}
                   </Text>
                 </View>
-                <Text numberOfLines={1} style={styles.textSmall}>
-                  {convertGenre(item.genre_ids, type, isSearch)}
-                </Text>
+                {item.senderName ? (
+                  <Text numberOfLines={1} style={styles.textSmall}>
+                    Challenged by: {item.senderName}
+                  </Text>
+                ) : (
+                  <Text numberOfLines={1} style={styles.textSmall}>
+                    {convertGenre(item.genre_ids, type, isSearch)}
+                  </Text>
+                )}
               </View>
               <View style={[styles.textRow, styles.containerReview]}>
                 {renderScore(item.vote_average)}

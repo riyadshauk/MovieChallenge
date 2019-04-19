@@ -1,6 +1,8 @@
 import React from 'react';
 import { Asset } from 'expo';
 
+import { AsyncStorage } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 // @ts-ignore
 import { Assets as StackAssets } from 'react-navigation-stack';
@@ -40,9 +42,8 @@ export default class ChallengeList extends MovieListScreen {
     super(props);
     this.state = {
       ...this.state,
-      challengeList: [],
       email: '',
-      currentUserID: 2,
+      currentUserID: undefined,
       fetchChallengeListRequest: undefined,
       fetchChallengeMoviesRequest: undefined
     };
@@ -55,7 +56,8 @@ export default class ChallengeList extends MovieListScreen {
     const hasAdultContent = await getItem('@ConfigKey', 'hasAdultContent');
     this.setState({
       hasAdultContent,
-      email: navigation.getParam('email', 'no-email-address-found@example.com')
+      email: navigation.getParam('email', 'no-email-address-found@example.com'),
+      currentUserID: await AsyncStorage.getItem('userID')
     });
     this.createMoviesList();
   }
@@ -147,12 +149,13 @@ export default class ChallengeList extends MovieListScreen {
     const seen = {};
     return challenges.filter(challenge => {
       // filter out duplicate challenges (same movie from multiple users)
-      if (seen[challenge.id]) {
-        return false;
-      }
+      // if (seen[challenge.id]) {
+      //   return false;
+      // }
       seen[challenge.id] = true;
       // filter out challenges that aren't intended for the current user
-      return currentUserID === challenge.recipientID && !challenge.accepted;
+      // eslint-disable-next-line eqeqeq
+      return currentUserID == challenge.recipientID && !challenge.accepted;
     });
   };
 }

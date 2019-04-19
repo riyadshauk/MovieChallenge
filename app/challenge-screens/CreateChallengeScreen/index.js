@@ -26,6 +26,7 @@ export default class CreateChallengeScreen extends React.Component {
     movieID: undefined,
     userID: undefined,
     email: undefined,
+    name: undefined,
     users: [],
     fetchUsersRequest: undefined,
     selectedUserID: undefined,
@@ -38,6 +39,7 @@ export default class CreateChallengeScreen extends React.Component {
       movieID: this.props.navigation.getParam('movieID', 'defaultMovieID'),
       userID: await AsyncStorage.getItem('userID'),
       email: await AsyncStorage.getItem('email'),
+      name: await AsyncStorage.getItem('name'),
       fetchUsersRequest: this.fetchUsers()
     });
   }
@@ -95,10 +97,10 @@ export default class CreateChallengeScreen extends React.Component {
   createChallenge = () => {
     return makeCancelable(
       new Promise(async (resolve, reject) => {
-        const { userID, movieID } = this.state;
+        const { userID, movieID, name } = this.state;
         const body = {
-          // @todo
-          userID,
+          senderID: userID,
+          senderName: name,
           movieID,
           recipientID: this.state.selectedUserID,
           accepted: false
