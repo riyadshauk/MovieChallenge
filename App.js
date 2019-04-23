@@ -8,7 +8,11 @@ import {
 } from 'react-navigation';
 import { createMaterialBottomTabNavigator } from 'react-navigation-material-bottom-tabs';
 
-import { Feather } from '@expo/vector-icons';
+import {
+  Feather,
+  MaterialCommunityIcons,
+  Foundation
+} from '@expo/vector-icons';
 
 import MovieListScreen from './app/screens/MovieListScreen';
 import ConfigurationScreen from './app/screens/ConfigurationScreen';
@@ -25,6 +29,7 @@ const TitleMovieTab = 'Home';
 const TitleConfigTab = 'More';
 const TitleSearchTab = 'Search';
 const TitleChallengeTab = 'Challenges';
+const TitleRecommendationsTab = 'For You';
 const TitleWebView = 'Trailer';
 const TitleCreateChallenge = 'Create a Challenge!';
 
@@ -54,12 +59,63 @@ const ChallengeTab = createStackNavigator({
         backgroundColor: '#ffffff'
       }
     }
+  },
+  MovieDetails: {
+    screen: MovieDetailsScreen,
+    navigationOptions: {
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
+      }
+    }
   }
 });
 
 ChallengeTab.navigationOptions = {
   tabBarIcon: ({ tintColor }) => (
-    <Feather name="home" size={20} color={tintColor} />
+    <Foundation name="mountains" size={20} color={tintColor} />
+  )
+};
+
+const RecommendationsTab = createStackNavigator({
+  ChallengeList: {
+    screen: ChallengeListScreen,
+    navigationOptions: {
+      title: 'Recommendations',
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  },
+  CreateChallenge: {
+    screen: CreateChallengeScreen,
+    navigationOptions: {
+      title: TitleCreateChallenge,
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  },
+  MovieDetails: {
+    screen: MovieDetailsScreen,
+    navigationOptions: {
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  }
+});
+
+RecommendationsTab.navigationOptions = {
+  tabBarIcon: ({ tintColor }) => (
+    <MaterialCommunityIcons
+      name="lightbulb-on-outline"
+      size={20}
+      color={tintColor}
+    />
   )
 };
 
@@ -92,6 +148,16 @@ const MoviesTab = createStackNavigator(
           backgroundColor: '#ffffff'
         },
         title: TitleWebView
+      }
+    },
+    CreateChallenge: {
+      screen: CreateChallengeScreen,
+      navigationOptions: {
+        title: TitleCreateChallenge,
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
       }
     }
   },
@@ -197,97 +263,72 @@ const MovieListTabBarVisible = navigation => {
   return true;
 };
 
+const bottomTabs = {
+  Movie: {
+    screen: MoviesTab,
+    navigationOptions: ({ navigation }) => ({
+      title: TitleMovieTab,
+      tabBarVisible: MovieListTabBarVisible(navigation)
+    })
+  },
+  Search: {
+    screen: SearchTab,
+    navigationOptions: ({ navigation }) => ({
+      title: TitleSearchTab,
+      tabBarVisible: MovieListTabBarVisible(navigation)
+    })
+  },
+  Challenges: {
+    screen: ChallengeTab,
+    navigationOptions: ({ navigation }) => ({
+      title: TitleChallengeTab,
+      tabBarVisible: MovieListTabBarVisible(navigation)
+    })
+  },
+  Recommendations: {
+    screen: RecommendationsTab,
+    navigationOptions: ({ navigation }) => ({
+      title: TitleRecommendationsTab,
+      tabBarVisible: MovieListTabBarVisible(navigation)
+    })
+  },
+  Config: {
+    screen: ConfigurationTab,
+    navigationOptions: {
+      title: TitleConfigTab
+    }
+  }
+};
+
 const MainNavigator =
   Platform.OS === 'ios'
-    ? createBottomTabNavigator(
-        {
-          Movie: {
-            screen: MoviesTab,
-            navigationOptions: ({ navigation }) => ({
-              title: TitleMovieTab,
-              tabBarVisible: MovieListTabBarVisible(navigation)
-            })
-          },
-          Search: {
-            screen: SearchTab,
-            navigationOptions: ({ navigation }) => ({
-              title: TitleSearchTab,
-              tabBarVisible: MovieListTabBarVisible(navigation)
-            })
-          },
-          Challenges: {
-            screen: ChallengeTab,
-            navigationOptions: ({ navigation }) => ({
-              title: TitleChallengeTab,
-              tabBarVisible: MovieListTabBarVisible(navigation)
-            })
-          },
-          Config: {
-            screen: ConfigurationTab,
-            navigationOptions: {
-              title: TitleConfigTab
-            }
-          }
-        },
-        {
-          tabBarOptions: {
-            activeTintColor: '#F95F62',
-            inactiveTintColor: '#8190A5',
-            showIcon: true,
-            labelStyle: {
-              margin: 0,
-              padding: 2
-            },
-            style: {
-              backgroundColor: '#ffffff'
-            }
-          },
-          animationEnabled: false,
-          swipeEnabled: false
-        }
-      )
-    : createMaterialBottomTabNavigator(
-        {
-          Movie: {
-            screen: MoviesTab,
-            navigationOptions: ({ navigation }) => ({
-              title: TitleMovieTab,
-              tabBarVisible: MovieListTabBarVisible(navigation)
-            })
-          },
-          Search: {
-            screen: SearchTab,
-            navigationOptions: ({ navigation }) => ({
-              title: TitleSearchTab,
-              tabBarVisible: MovieListTabBarVisible(navigation)
-            })
-          },
-          Challenges: {
-            screen: ChallengeTab,
-            navigationOptions: ({ navigation }) => ({
-              title: TitleChallengeTab,
-              tabBarVisible: MovieListTabBarVisible(navigation)
-            })
-          },
-          Config: {
-            screen: ConfigurationTab,
-            navigationOptions: {
-              title: TitleConfigTab
-            }
-          }
-        },
-        {
-          initialRouteName: 'Movie',
+    ? createBottomTabNavigator(bottomTabs, {
+        tabBarOptions: {
           activeTintColor: '#F95F62',
           inactiveTintColor: '#8190A5',
-          shifting: true,
-          barStyle: {
-            backgroundColor: '#ffffff',
-            paddingTop: 2,
-            paddingBottom: 2
+          showIcon: true,
+          labelStyle: {
+            margin: 0,
+            padding: 2
+          },
+          style: {
+            backgroundColor: '#ffffff'
           }
+        },
+        animationEnabled: false,
+        swipeEnabled: false
+      })
+    : createMaterialBottomTabNavigator(bottomTabs, {
+        initialRouteName: 'Movie',
+        activeTintColor: '#F95F62',
+        inactiveTintColor: '#8190A5',
+        shifting: true,
+        barStyle: {
+          backgroundColor: '#ffffff',
+          paddingTop: 2,
+          paddingBottom: 2
         }
-      );
+      });
 
 const AppNavigator = createSwitchNavigator(
   {

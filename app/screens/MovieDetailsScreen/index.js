@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
-import { ScrollView, View, Text } from 'react-native';
-
-// @ts-ignore
+import { Picker, ScrollView, View, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import ReadMore from 'react-native-read-more-text';
+import { RkButton } from 'react-native-ui-kitten';
 
 import { Alert } from '../../components/common/Alert';
 import { Share } from '../../components/common/Share';
@@ -17,7 +16,10 @@ import SectionRow from '../../components/cards/rows/SectionRow';
 import MainInfoRow from '../../components/cards/rows/MainInfoRow';
 import { TouchableOpacity } from '../../components/common/TouchableOpacity';
 
-import request from '../../services/Api';
+import request, {
+  requestOMCe,
+  requestRecommendationAPI
+} from '../../services/Api';
 
 // @ts-ignore
 import language from '../../assets/language/iso.json';
@@ -26,6 +28,7 @@ import { darkBlue } from '../../styles/Colors';
 import styles from './styles';
 
 import config from '../../../config';
+import { getItem } from '../../utils/AsyncStorage';
 
 const uninformed = 'Uninformed';
 
@@ -64,11 +67,14 @@ export default class MovieDetailsScreen extends Component {
     isVisible: false,
     showImage: false,
     creditId: null,
-    challengeCompleted: false
+    challengeCompleted: false,
+    rating: 5,
+    userID: undefined
   };
 
-  componentDidMount() {
+  async componentDidMount() {
     this.props.navigation.setParams({ actionShare: this.actionShare });
+    this.setState({ userID: await getItem('userID') });
     this.requestMoviesInfo();
   }
 
@@ -83,6 +89,15 @@ export default class MovieDetailsScreen extends Component {
       return true;
     }
     return false;
+  }
+
+  componentWillUnmount() {
+    if (
+      this.state.updateUserRatingRequest &&
+      this.state.updateUserRatingRequest.cancel instanceof Function
+    ) {
+      this.state.fetchChallengeListRequest.cancel();
+    }
   }
 
   requestMoviesInfo = async () => {
@@ -242,7 +257,7 @@ export default class MovieDetailsScreen extends Component {
     });
   };
 
-  callPutChallenge = async () => {
+  callPutChallenge = () => {
     return new Promise(async (resolve, reject) => {
       const options = {
         method: 'put',
@@ -250,13 +265,29 @@ export default class MovieDetailsScreen extends Component {
         json: true
       };
       try {
-        const response = await (await fetch(
-          `${config.baseURL} /mobile/custom/Ash_SKy/UpdateChal/${
-            this.props.navigation.state.params.challengeID
-          }`,
-          options
-        )).json();
-        resolve(response);
+        const data = await requestOMCe('UpdateChal', options);
+        resolve(data);
+      } catch (err) {
+        reject(err.stack);
+      }
+    });
+  };
+
+  updateUserRating = () => {
+    return new Promise(async (resolve, reject) => {
+      const body = {
+        movie_id: this.props.navigation.state.params.id,
+        user_id: this.state.userID
+      };
+      const options = {
+        method: 'post',
+        headers: config.headers,
+        json: true,
+        body: JSON.stringify(body)
+      };
+      try {
+        const data = await requestRecommendationAPI('ratings', options);
+        resolve(data);
       } catch (err) {
         reject(err.stack);
       }
@@ -307,6 +338,30 @@ export default class MovieDetailsScreen extends Component {
             />
             <View style={styles.containerMovieInfo}>
               <MainInfoRow data={infosDetail} />
+              <Picker
+                selectedValue={this.state.rating}
+                style={styles.picker}
+                onValueChange={rating => this.setState({ rating })}
+              >
+                {[...Array(101)].map((v, i) => (
+                  // eslint-disable-next-line react/no-array-index-key
+                  <Picker.Item
+                    key={i / 10}
+                    label={String(i / 10)}
+                    value={i / 10}
+                  />
+                ))}
+              </Picker>
+              <RkButton
+                rkType="xlarge"
+                onPress={() =>
+                  this.setState({
+                    updateUserRatingRequest: this.updateUserRating()
+                  })
+                }
+              >
+                <Text>Rate This Movie</Text>
+              </RkButton>
               <SectionRow title="Synopsis">
                 <ReadMore
                   numberOfLines={3}

@@ -61,14 +61,16 @@ export default class MovieRow extends React.PureComponent {
   render() {
     const { numColumns, item, type, isSearch, navigate } = this.props;
 
+    const { id, movieID, senderName } = item;
+
     if (numColumns === 1) {
       return (
         <TouchableOpacity
           onPress={() =>
             navigate('MovieDetails', {
-              id: item.movieID,
-              senderName: item.senderName,
-              challengeID: item.id
+              id: movieID || id,
+              senderName,
+              challengeID: id
             })
           }
         >
@@ -97,7 +99,8 @@ export default class MovieRow extends React.PureComponent {
                 </Text>
                 {item.senderName ? (
                   <Text numberOfLines={1} style={styles.textSmall}>
-                    Challenged by: {item.senderName}
+                    Challenged by:
+                    {` ${senderName}`}
                   </Text>
                 ) : (
                   <Text />

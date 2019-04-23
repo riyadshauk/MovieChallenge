@@ -42,6 +42,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: darkBlue,
     marginBottom: 7
+  },
+  picker: {
+    width: 300
   }
 });
 

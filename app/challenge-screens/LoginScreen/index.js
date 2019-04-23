@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import config from '../../../config';
 import styles from './styles';
 import makeCancelable from '../../utils/makeCancelable';
+import { requestOMCe } from '../../services/Api';
 
 const { headers } = config;
 
@@ -60,11 +61,7 @@ export default class LoginScreen extends React.Component {
           json: true
         };
         try {
-          const response = await fetch(
-            `${config.baseURL}/mobile/custom/Ash_SKy/SkyGet`,
-            options
-          );
-          const { items } = await response.json();
+          const { items } = await requestOMCe('SkyGet', options);
           this.setState({ users: items });
           resolve(items);
         } catch (err) {
@@ -75,10 +72,10 @@ export default class LoginScreen extends React.Component {
   };
 
   verifyValidEmail = async () => {
-    const { users, email } = this.state;
     const { navigation } = this.props;
     const { navigate } = navigation;
-    await users;
+    await (await this.state.fetchUsersRequest).promise; // must be before referencing this.state.users
+    const { users, email } = this.state;
     let valid = false;
     users.forEach(async user => {
       if (email === user.email) {

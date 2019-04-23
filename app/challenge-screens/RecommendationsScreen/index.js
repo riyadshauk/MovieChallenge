@@ -1,5 +1,8 @@
 import React from 'react';
 import { Asset } from 'expo';
+
+import { AsyncStorage } from 'react-native';
+
 import { Feather } from '@expo/vector-icons';
 // @ts-ignore
 import { Assets as StackAssets } from 'react-navigation-stack';
@@ -11,17 +14,16 @@ import { darkBlue } from '../../styles/Colors';
 
 import styles from './styles';
 
-import request, { requestOMCe } from '../../services/Api';
+import request, { requestRecommendationAPI } from '../../services/Api';
 import MovieListScreen from '../../screens/MovieListScreen';
 
 import config from '../../../config';
 import makeCancelable from '../../utils/makeCancelable';
 
 /**
- * @author Darshan Sapaliga
  * @author Riyad Shauk
  */
-export default class ChallengeList extends MovieListScreen {
+export default class RecommendationsScreen extends MovieListScreen {
   static navigationOptions = ({ navigation }) => {
     const params = navigation.state.params || {};
     return {
@@ -42,8 +44,8 @@ export default class ChallengeList extends MovieListScreen {
       ...this.state,
       email: '',
       currentUserID: undefined,
-      fetchChallengeListRequest: undefined,
-      fetchChallengeMoviesRequest: undefined
+      fetchMovieRecommendationsRequest: undefined,
+      fetchRecommendedMoviesRequest: undefined
     };
   }
 
@@ -55,7 +57,7 @@ export default class ChallengeList extends MovieListScreen {
     this.setState({
       hasAdultContent,
       email: navigation.getParam('email', 'no-email-address-found@example.com'),
-      currentUserID: await getItem('userID')
+      currentUserID: await AsyncStorage.getItem('userID')
     });
     this.createMoviesList();
   }
@@ -66,27 +68,29 @@ export default class ChallengeList extends MovieListScreen {
    */
   componentWillUnmount() {
     if (
-      this.state.fetchChallengeListRequest &&
-      this.state.fetchChallengeListRequest.cancel instanceof Function
+      this.state.fetchMovieRecommendationsRequest &&
+      this.state.fetchMovieRecommendationsRequest.cancel instanceof Function
     ) {
-      this.state.fetchChallengeListRequest.cancel();
+      this.state.fetchMovieRecommendationsRequest.cancel();
     }
     // @ts-ignore
     if (
-      this.state.fetchChallengeMoviesRequest &&
-      this.state.fetchChallengeMoviesRequest.cancel instanceof Function
+      this.state.fetchRecommendedMoviesRequest &&
+      this.state.fetchRecommendedMoviesRequest.cancel instanceof Function
     ) {
       // @ts-ignore
-      this.state.fetchChallengeMoviesRequest.cancel();
+      this.state.fetchRecommendedMoviesRequest.cancel();
     }
   }
 
-  fetchChallengeMovies = () => {
+  fetchRecommendedMovies = () => {
     return makeCancelable(
       new Promise(async resolve => {
-        this.setState({ fetchChallengeListRequest: this.fetchChallengeList() });
-        const challengeList = await (await this.state.fetchChallengeListRequest)
-          .promise;
+        this.setState({
+          fetchMovieRecommendationsRequest: this.fetchMovieRecommendations()
+        });
+        const challengeList = await (await this.state
+          .fetchMovieRecommendationsRequest).promise;
         challengeList.forEach(async (challengeMovie, idx) => {
           const movieData = await request(`movie/${challengeMovie.movieID}`);
           const updatedChallengeMovie = {
@@ -105,10 +109,11 @@ export default class ChallengeList extends MovieListScreen {
   createMoviesList = async () => {
     this.setState({
       isLoading: true,
-      fetchChallengeMoviesRequest: this.fetchChallengeMovies()
+      fetchRecommendedMoviesRequest: this.fetchRecommendedMovies()
     });
     // eslint-disable-next-line react/no-access-state-in-setstate
-    const movies = await (await this.state.fetchChallengeMoviesRequest).promise;
+    const movies = await (await this.state.fetchRecommendedMoviesRequest)
+      .promise;
     this.setState({
       isLoading: false,
       isLoadingMore: false,
@@ -117,7 +122,7 @@ export default class ChallengeList extends MovieListScreen {
     });
   };
 
-  fetchChallengeList = async () => {
+  fetchMovieRecommendations = async () => {
     return makeCancelable(
       new Promise(async (resolve, reject) => {
         const options = {
@@ -126,27 +131,17 @@ export default class ChallengeList extends MovieListScreen {
           json: true
         };
         try {
-          const { items } = await requestOMCe('ChallengeList', options);
-          resolve(this.filterChallenges(items));
+          const data = await requestRecommendationAPI(
+            `recommendations?user_id=${this.state.currentUserID}`,
+            options
+          );
+          // @todo
+          // resolve(this.filterChallenges(items));
+          resolve(data);
         } catch (err) {
           reject(err.stack);
         }
       })
     );
-  };
-
-  filterChallenges = challenges => {
-    const { currentUserID } = this.state;
-    const seen = {};
-    return challenges.filter(challenge => {
-      // filter out duplicate challenges (same movie from multiple users)
-      // if (seen[challenge.id]) {
-      //   return false;
-      // }
-      seen[challenge.id] = true;
-      // filter out challenges that aren't intended for the current user
-      // eslint-disable-next-line eqeqeq
-      return currentUserID == challenge.recipientID && !challenge.accepted;
-    });
   };
 }

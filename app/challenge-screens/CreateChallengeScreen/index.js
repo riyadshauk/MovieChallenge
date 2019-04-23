@@ -6,6 +6,7 @@ import { RkButton } from 'react-native-ui-kitten';
 import config from '../../../config';
 import styles from './styles';
 import makeCancelable from '../../utils/makeCancelable';
+import { requestOMCe } from '../../services/Api';
 
 const { headers } = config;
 
@@ -71,11 +72,7 @@ export default class CreateChallengeScreen extends React.Component {
           json: true
         };
         try {
-          const response = await fetch(
-            `${config.baseURL}/mobile/custom/Ash_SKy/SkyGet`,
-            options
-          );
-          const { items } = await response.json();
+          const { items } = await requestOMCe('SkyGet', options);
           items.forEach(user => {
             // eslint-disable-next-line no-param-reassign
             user.name = user.email
@@ -99,10 +96,10 @@ export default class CreateChallengeScreen extends React.Component {
       new Promise(async (resolve, reject) => {
         const { userID, movieID, name } = this.state;
         const body = {
-          senderID: userID,
+          senderID: Number(userID),
           senderName: name,
-          movieID,
-          recipientID: this.state.selectedUserID,
+          movieID: Number(movieID),
+          recipientID: Number(this.state.selectedUserID),
           accepted: false
         };
         const options = {
@@ -115,12 +112,9 @@ export default class CreateChallengeScreen extends React.Component {
           body: JSON.stringify(body)
         };
         try {
-          const response = await (await fetch(
-            `${config.baseURL}/mobile/custom/Ash_SKy/ChallengePostList`,
-            options
-          )).json();
+          const data = await requestOMCe('ChallengePostList', options);
           this.setState({ userChallenged: true });
-          resolve(response);
+          resolve(data);
         } catch (err) {
           reject(err.stack);
         }
@@ -159,13 +153,6 @@ export default class CreateChallengeScreen extends React.Component {
         </Picker>
 
         <RkButton
-          style={
-            {
-              // marginTop: 200,
-              // marginBottom: 0
-              // bottom: 0
-            }
-          }
           rkType="xlarge"
           onPress={() =>
             this.setState({ createChallengeRequest: this.createChallenge() })
