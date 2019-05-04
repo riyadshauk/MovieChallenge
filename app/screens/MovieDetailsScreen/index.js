@@ -16,10 +16,7 @@ import SectionRow from '../../components/cards/rows/SectionRow';
 import MainInfoRow from '../../components/cards/rows/MainInfoRow';
 import { TouchableOpacity } from '../../components/common/TouchableOpacity';
 
-import request, {
-  requestOMCe,
-  requestRecommendationAPI
-} from '../../services/Api';
+import request, { requestRecommendationAPI } from '../../services/Api';
 
 // @ts-ignore
 import language from '../../assets/language/iso.json';
@@ -67,14 +64,13 @@ export default class MovieDetailsScreen extends Component {
     isVisible: false,
     showImage: false,
     creditId: null,
-    challengeCompleted: false,
-    rating: 5,
-    userID: undefined
+    rating: 50,
+    user_id: undefined
   };
 
   async componentDidMount() {
     this.props.navigation.setParams({ actionShare: this.actionShare });
-    this.setState({ userID: await getItem('userID') });
+    this.setState({ user_id: await getItem('user_id') });
     this.requestMoviesInfo();
   }
 
@@ -84,7 +80,8 @@ export default class MovieDetailsScreen extends Component {
       this.state.isVisible !== nextState.isVisible ||
       this.state.showImage !== nextState.showImage ||
       this.state.isLoading !== nextState.isLoading ||
-      this.state.isError !== nextState.isError
+      this.state.isError !== nextState.isError ||
+      this.state.rating !== nextState.rating
     ) {
       return true;
     }
@@ -154,8 +151,8 @@ export default class MovieDetailsScreen extends Component {
         language[original_language] || ''
       ),
       Release: this.convertToDate(release_date || ''),
-      Budget: this.convertToDolar(budget || 0),
-      Revenue: this.convertToDolar(revenue || 0),
+      Budget: this.convertToDollar(budget || 0),
+      Revenue: this.convertToDollar(revenue || 0),
       Adult: this.convertAdult(adult || '')
     };
   };
@@ -171,7 +168,7 @@ export default class MovieDetailsScreen extends Component {
     return arr.length > num ? arr.slice(0, num) : arr;
   };
 
-  convertToDolar = value => {
+  convertToDollar = value => {
     return (
       `$${value.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')}` ||
       uninformed
@@ -250,34 +247,11 @@ export default class MovieDetailsScreen extends Component {
     </View>
   );
 
-  completeChallenge = () => {
-    this.callPutChallenge();
-    this.setState({
-      challengeCompleted: true
-    });
-  };
-
-  callPutChallenge = () => {
-    return new Promise(async (resolve, reject) => {
-      const options = {
-        method: 'put',
-        headers: config.headers,
-        json: true
-      };
-      try {
-        const data = await requestOMCe('UpdateChal', options);
-        resolve(data);
-      } catch (err) {
-        reject(err.stack);
-      }
-    });
-  };
-
   updateUserRating = () => {
     return new Promise(async (resolve, reject) => {
       const body = {
         movie_id: this.props.navigation.state.params.id,
-        user_id: this.state.userID
+        user_id: this.state.user_id
       };
       const options = {
         method: 'post',
@@ -292,6 +266,25 @@ export default class MovieDetailsScreen extends Component {
         reject(err.stack);
       }
     });
+  };
+
+  RatingPicker = () => {
+    return (
+      <Picker
+        selectedValue={this.state.rating}
+        style={styles.picker}
+        onValueChange={rating => this.setState({ rating })}
+      >
+        {[...Array(101)].map((v, i) => (
+          <Picker.Item
+            // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            label={String(i / 10)}
+            value={i}
+          />
+        ))}
+      </Picker>
+    );
   };
 
   render() {
@@ -338,20 +331,7 @@ export default class MovieDetailsScreen extends Component {
             />
             <View style={styles.containerMovieInfo}>
               <MainInfoRow data={infosDetail} />
-              <Picker
-                selectedValue={this.state.rating}
-                style={styles.picker}
-                onValueChange={rating => this.setState({ rating })}
-              >
-                {[...Array(101)].map((v, i) => (
-                  // eslint-disable-next-line react/no-array-index-key
-                  <Picker.Item
-                    key={i / 10}
-                    label={String(i / 10)}
-                    value={i / 10}
-                  />
-                ))}
-              </Picker>
+              <this.RatingPicker />
               <RkButton
                 rkType="xlarge"
                 onPress={() =>
@@ -371,26 +351,6 @@ export default class MovieDetailsScreen extends Component {
                   <Text style={styles.subTitleInfo}>{overview}</Text>
                 </ReadMore>
               </SectionRow>
-              {this.props.navigation.state.params.senderName ? (
-                <SectionRow title="">
-                  <TouchableOpacity
-                    style={styles.buttonCompleted}
-                    onPress={() => this.completeChallenge()}
-                  >
-                    <Text style={styles.title}> Mark as completed </Text>
-                  </TouchableOpacity>
-                </SectionRow>
-              ) : (
-                <Text />
-              )}
-              {this.state.challengeCompleted ? (
-                <Text>
-                  Challenge successfully completed! You receive a free deal,
-                  check your email!
-                </Text>
-              ) : (
-                <Text />
-              )}
               <SectionRow title="Main cast">
                 <PersonListRow
                   data={cast}

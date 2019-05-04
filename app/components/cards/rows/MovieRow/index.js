@@ -12,7 +12,6 @@ import { width } from '../../../../utils/Metrics';
 import { notFound } from '../../../../utils/StaticImages';
 
 import styles from './styles';
-import CreateChallengeButton from '../../../../challenge-components/CreateChallengeButton';
 
 const getImageApi = image =>
   image ? { uri: `https://image.tmdb.org/t/p/w500/${image}` } : notFound;
@@ -61,58 +60,37 @@ export default class MovieRow extends React.PureComponent {
   render() {
     const { numColumns, item, type, isSearch, navigate } = this.props;
 
-    const { id, movieID, senderName } = item;
-
     if (numColumns === 1) {
       return (
-        <TouchableOpacity
-          onPress={() =>
-            navigate('MovieDetails', {
-              id: movieID || id,
-              senderName,
-              challengeID: id
-            })
-          }
-        >
-          <View style={styles.containerItem}>
-            <Image
-              source={getImageApi(item.poster_path)}
-              style={styles.photo}
-              width={width * 0.3}
-            />
-            <View style={styles.item}>
-              <View>
-                <Text numberOfLines={2} style={styles.textTitle}>
-                  {item.title}
+        <View style={styles.containerItem}>
+          <Image
+            source={getImageApi(item.poster_path)}
+            style={styles.photo}
+            width={width * 0.3}
+          />
+          <View style={styles.item}>
+            <View>
+              <Text numberOfLines={2} style={styles.textTitle}>
+                {item.title}
+              </Text>
+              <View style={[styles.textRow, styles.containerSubTitle]}>
+                <Text style={styles.textSmall}>
+                  {convertToDate(item.release_date)}
                 </Text>
-                <View style={[styles.textRow, styles.containerSubTitle]}>
-                  <Text style={styles.textSmall}>
-                    {convertToDate(item.release_date)}
-                  </Text>
-                  {renderDivider(item.release_date, item.original_language)}
-                  <Text numberOfLines={1} style={styles.textSmall}>
-                    {convertToUpperCaseFirstLetter(item.original_language)}
-                  </Text>
-                </View>
+                {renderDivider(item.release_date, item.original_language)}
                 <Text numberOfLines={1} style={styles.textSmall}>
-                  {convertGenre(item.genre_ids, type, isSearch)}
+                  {convertToUpperCaseFirstLetter(item.original_language)}
                 </Text>
-                {item.senderName ? (
-                  <Text numberOfLines={1} style={styles.textSmall}>
-                    Challenged by:
-                    {` ${senderName}`}
-                  </Text>
-                ) : (
-                  <Text />
-                )}
               </View>
-              <View style={[styles.textRow, styles.containerReview]}>
-                {renderScore(item.vote_average)}
-              </View>
-              <CreateChallengeButton movieID={item.id} navigate={navigate} />
+              <Text numberOfLines={1} style={styles.textSmall}>
+                {convertGenre(item.genre_ids, type, isSearch)}
+              </Text>
+            </View>
+            <View style={[styles.textRow, styles.containerReview]}>
+              {renderScore(item.vote_average)}
             </View>
           </View>
-        </TouchableOpacity>
+        </View>
       );
     }
     return (

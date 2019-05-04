@@ -18,7 +18,6 @@ import { getItem } from '../../utils/AsyncStorage';
 import { darkBlue } from '../../styles/Colors';
 
 import styles from './styles';
-// import console = require('console');
 
 export default class MovieListScreen extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -124,15 +123,27 @@ export default class MovieListScreen extends Component {
     }
   };
 
-  renderItem = (item, type, isSearch, numColumns, navigate) => (
-    <MovieRow
-      item={item}
-      type={type}
-      isSearch={isSearch}
-      numColumns={numColumns}
-      navigate={navigate}
-    />
-  );
+  renderItem = (item, type, isSearch, numColumns, navigate) => {
+    const { id, movieID, senderName } = item;
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          navigate('MovieDetails', {
+            id: movieID || id,
+            senderName
+          })
+        }
+      >
+        <MovieRow
+          item={item}
+          type={type}
+          isSearch={isSearch}
+          numColumns={numColumns}
+          navigate={navigate}
+        />
+      </TouchableOpacity>
+    );
+  };
 
   renderFooter = () => {
     const { isLoadingMore, totalPages, page, results } = this.state;

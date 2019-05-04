@@ -1,0 +1,1 @@
+{"apiVersion":"1.0","swaggerVersion":"1.2","basePath":"/mobile/custom/movie_club","apis":[],"models":{},"produces":["application/json"],"consumes":["application/json"],"info":{"title":"movie_club","description":"MovieClub REST API"}}

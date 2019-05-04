@@ -6,6 +6,11 @@ export default StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
+  item: {
+    padding: 10,
+    fontSize: 18,
+    height: 44
+  },
   paragraph: {
     textAlign: 'center',
     color: '#002f2f',

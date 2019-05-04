@@ -1,0 +1,8 @@
+config.js
+**/*.zip
+**/*.gz
+**/*.tgz
+package-lock.json
+package*
+!package.json
+!package-lock.json

@@ -4,6 +4,7 @@ import { Asset } from 'expo';
 import { AsyncStorage } from 'react-native';
 
 import { Feather } from '@expo/vector-icons';
+
 // @ts-ignore
 import { Assets as StackAssets } from 'react-navigation-stack';
 
@@ -15,10 +16,11 @@ import { darkBlue } from '../../styles/Colors';
 import styles from './styles';
 
 import request, { requestRecommendationAPI } from '../../services/Api';
-import MovieListScreen from '../../screens/MovieListScreen';
+import MovieListScreen from '../MovieListScreen';
 
 import config from '../../../config';
 import makeCancelable from '../../utils/makeCancelable';
+import MovieRow from '../../components/cards/rows/MovieRow';
 
 /**
  * @author Riyad Shauk
@@ -27,6 +29,7 @@ export default class RecommendationsScreen extends MovieListScreen {
   static navigationOptions = ({ navigation }) => {
     const params = navigation.state.params || {};
     return {
+      title: 'Recommendations',
       headerRight: (
         <TouchableOpacity
           style={styles.buttonFilter}
@@ -57,7 +60,7 @@ export default class RecommendationsScreen extends MovieListScreen {
     this.setState({
       hasAdultContent,
       email: navigation.getParam('email', 'no-email-address-found@example.com'),
-      currentUserID: await AsyncStorage.getItem('userID')
+      currentUserID: await AsyncStorage.getItem('user_id')
     });
     this.createMoviesList();
   }
@@ -83,23 +86,46 @@ export default class RecommendationsScreen extends MovieListScreen {
     }
   }
 
+  renderItem = (item, type, isSearch, numColumns, navigate) => {
+    const { id, movieID, senderName, title } = item;
+    return (
+      <TouchableOpacity
+        onPress={async () =>
+          navigate('MovieDetails', {
+            id: movieID || id,
+            senderName,
+            title
+          })
+        }
+      >
+        <MovieRow
+          item={item}
+          type={type}
+          isSearch={isSearch}
+          numColumns={numColumns}
+          navigate={navigate}
+        />
+      </TouchableOpacity>
+    );
+  };
+
   fetchRecommendedMovies = () => {
     return makeCancelable(
       new Promise(async resolve => {
         this.setState({
           fetchMovieRecommendationsRequest: this.fetchMovieRecommendations()
         });
-        const challengeList = await (await this.state
+        const movieIDs = await (await this.state
           .fetchMovieRecommendationsRequest).promise;
-        challengeList.forEach(async (challengeMovie, idx) => {
-          const movieData = await request(`movie/${challengeMovie.movieID}`);
-          const updatedChallengeMovie = {
+        movieIDs.forEach(async (movieID, idx) => {
+          const movieData = await request(`movie/${movieID}`);
+          const updatedMovieData = {
             ...movieData,
-            ...challengeMovie
+            id: movieID
           };
-          challengeList[idx] = updatedChallengeMovie;
-          if (challengeList.length - 1 === idx) {
-            resolve(challengeList);
+          movieIDs[idx] = updatedMovieData;
+          if (movieIDs.length - 1 === idx) {
+            resolve(movieIDs);
           }
         });
       })
@@ -131,13 +157,11 @@ export default class RecommendationsScreen extends MovieListScreen {
           json: true
         };
         try {
-          const data = await requestRecommendationAPI(
+          const { payload } = await requestRecommendationAPI(
             `recommendations?user_id=${this.state.currentUserID}`,
             options
           );
-          // @todo
-          // resolve(this.filterChallenges(items));
-          resolve(data);
+          resolve(payload);
         } catch (err) {
           reject(err.stack);
         }

@@ -11,7 +11,7 @@ import { createMaterialBottomTabNavigator } from 'react-navigation-material-bott
 import {
   Feather,
   MaterialCommunityIcons,
-  Foundation
+  MaterialIcons
 } from '@expo/vector-icons';
 
 import MovieListScreen from './app/screens/MovieListScreen';
@@ -21,17 +21,21 @@ import SearchScreen from './app/screens/SearchScreen';
 import SearchResultsScreen from './app/screens/SearchResultsScreen';
 import WebViewScreen from './app/screens/WebViewScreen';
 
-import LoginScreen from './app/challenge-screens/LoginScreen';
-import ChallengeListScreen from './app/challenge-screens/ChallengeListScreen';
-import CreateChallengeScreen from './app/challenge-screens/CreateChallengeScreen';
+import LoginScreen from './app/screens/LoginScreen';
+import ClubListScreen from './app/screens/ClubListScreen';
+import ClubThreadScreen from './app/screens/ClubThreadScreen';
+import JoinClubScreen from './app/screens/JoinClubScreen';
+import RecommendationsScreen from './app/screens/RecommendationsScreen';
+import BrowseMoviesForClubScreen from './app/screens/BrowseMoviesForClubScreen';
+import AddMovieForClubScreen from './app/screens/AddMovieForClubScreen';
+import CreateClubScreen from './app/screens/CreateClubScreen';
 
 const TitleMovieTab = 'Home';
 const TitleConfigTab = 'More';
 const TitleSearchTab = 'Search';
-const TitleChallengeTab = 'Challenges';
 const TitleRecommendationsTab = 'For You';
 const TitleWebView = 'Trailer';
-const TitleCreateChallenge = 'Create a Challenge!';
+const TitleClubListTab = 'Clubs';
 
 const Login = createStackNavigator({
   Login: {
@@ -39,59 +43,78 @@ const Login = createStackNavigator({
   }
 });
 
-const ChallengeTab = createStackNavigator({
-  ChallengeList: {
-    screen: ChallengeListScreen,
-    navigationOptions: {
-      title: TitleChallengeTab,
-      headerTintColor: '#47525E',
-      headerStyle: {
-        backgroundColor: '#ffffff'
+const ClubListTab = createStackNavigator(
+  {
+    AddMovieForClub: {
+      screen: AddMovieForClubScreen,
+      navigationOptions: {
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
+      }
+    },
+    BrowseMoviesForClub: {
+      screen: BrowseMoviesForClubScreen,
+      navigationOptions: {
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
+      }
+    },
+    Clubs: {
+      screen: ClubListScreen,
+      navigationOptions: {
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
+      }
+    },
+    ClubThread: {
+      screen: ClubThreadScreen,
+      navigationOptions: {
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
+      }
+    },
+    CreateClub: {
+      screen: CreateClubScreen,
+      navigationOptions: {
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
+      }
+    },
+    JoinClub: {
+      screen: JoinClubScreen,
+      navigationOptions: {
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
       }
     }
   },
-  CreateChallenge: {
-    screen: CreateChallengeScreen,
-    navigationOptions: {
-      title: TitleCreateChallenge,
-      headerTintColor: '#47525E',
-      headerStyle: {
-        backgroundColor: '#ffffff'
-      }
-    }
-  },
-  MovieDetails: {
-    screen: MovieDetailsScreen,
-    navigationOptions: {
-      headerTintColor: '#47525E',
-      headerStyle: {
-        backgroundColor: '#ffffff'
-      }
-    }
+  {
+    initialRouteName: 'Clubs'
   }
-});
+);
 
-ChallengeTab.navigationOptions = {
+ClubListTab.navigationOptions = {
   tabBarIcon: ({ tintColor }) => (
-    <Foundation name="mountains" size={20} color={tintColor} />
+    <MaterialIcons name="group" size={20} color={tintColor} />
   )
 };
 
 const RecommendationsTab = createStackNavigator({
-  ChallengeList: {
-    screen: ChallengeListScreen,
+  Recommendations: {
+    screen: RecommendationsScreen,
     navigationOptions: {
-      title: 'Recommendations',
-      headerTintColor: '#47525E',
-      headerStyle: {
-        backgroundColor: '#ffffff'
-      }
-    }
-  },
-  CreateChallenge: {
-    screen: CreateChallengeScreen,
-    navigationOptions: {
-      title: TitleCreateChallenge,
       headerTintColor: '#47525E',
       headerStyle: {
         backgroundColor: '#ffffff'
@@ -148,16 +171,6 @@ const MoviesTab = createStackNavigator(
           backgroundColor: '#ffffff'
         },
         title: TitleWebView
-      }
-    },
-    CreateChallenge: {
-      screen: CreateChallengeScreen,
-      navigationOptions: {
-        title: TitleCreateChallenge,
-        headerTintColor: '#47525E',
-        headerStyle: {
-          backgroundColor: '#ffffff'
-        }
       }
     }
   },
@@ -278,17 +291,17 @@ const bottomTabs = {
       tabBarVisible: MovieListTabBarVisible(navigation)
     })
   },
-  Challenges: {
-    screen: ChallengeTab,
-    navigationOptions: ({ navigation }) => ({
-      title: TitleChallengeTab,
-      tabBarVisible: MovieListTabBarVisible(navigation)
-    })
-  },
   Recommendations: {
     screen: RecommendationsTab,
     navigationOptions: ({ navigation }) => ({
       title: TitleRecommendationsTab,
+      tabBarVisible: MovieListTabBarVisible(navigation)
+    })
+  },
+  Clubs: {
+    screen: ClubListTab,
+    navigationOptions: ({ navigation }) => ({
+      title: TitleClubListTab,
       tabBarVisible: MovieListTabBarVisible(navigation)
     })
   },

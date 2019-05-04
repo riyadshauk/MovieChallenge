@@ -3,12 +3,9 @@ import { AsyncStorage, View, Text } from 'react-native';
 import { RkTextInput, RkButton } from 'react-native-ui-kitten';
 import PropTypes from 'prop-types';
 
-import config from '../../../config';
 import styles from './styles';
 import makeCancelable from '../../utils/makeCancelable';
-import { requestOMCe } from '../../services/Api';
-
-const { headers } = config;
+import { requestDB } from '../../services/Api';
 
 /**
  * @author Riyad Shauk
@@ -24,7 +21,7 @@ export default class LoginScreen extends React.Component {
   };
 
   state = {
-    email: '',
+    email: 'user1@example.com',
     users: [],
     fetchUsersRequest: undefined,
     invalidEmailSubmitted: false
@@ -55,17 +52,13 @@ export default class LoginScreen extends React.Component {
   fetchUsers = () => {
     return makeCancelable(
       new Promise(async (resolve, reject) => {
-        const options = {
-          method: 'get',
-          headers,
-          json: true
-        };
         try {
-          const { items } = await requestOMCe('SkyGet', options);
-          this.setState({ users: items });
-          resolve(items);
+          const users = (await requestDB({ method: 'get', table: 'user' }))
+            .items;
+          this.setState({ users });
+          resolve(users);
         } catch (err) {
-          reject(err.stack);
+          reject(err);
         }
       })
     );
@@ -74,16 +67,21 @@ export default class LoginScreen extends React.Component {
   verifyValidEmail = async () => {
     const { navigation } = this.props;
     const { navigate } = navigation;
-    await (await this.state.fetchUsersRequest).promise; // must be before referencing this.state.users
+    await (await this.state.fetchUsersRequest).promise;
+    if (this.state.users === []) {
+      // prevent UI bug where user opens app without internet connection
+      // (assuming this.state.users !== [] when the fetch is successful)
+      this.setState({ fetchUsersRequest: await this.fetchUsers() });
+      await (await this.state.fetchUsersRequest).promise;
+    }
     const { users, email } = this.state;
     let valid = false;
     users.forEach(async user => {
       if (email === user.email) {
         valid = true;
-        await AsyncStorage.setItem('userID', String(user.id));
+        await AsyncStorage.setItem('user_id', String(user.id));
         await AsyncStorage.setItem('email', email);
-        await AsyncStorage.setItem('name', user.Name);
-        navigate('Main', { email, userID: user.userID });
+        navigate('Main', { email, user_id: user.user_id });
       }
     });
     if (!valid) {
@@ -93,15 +91,14 @@ export default class LoginScreen extends React.Component {
 
   InvalidMessage = () => {
     const { invalidEmailSubmitted, email } = this.state;
-    return invalidEmailSubmitted ? (
-      <Text>
-        Sorry,
-        {` '${email}' `}
-        is an invalid email. Please provide a correct email to continue.
-      </Text>
-    ) : (
-      <Text />
-    );
+    if (invalidEmailSubmitted) {
+      return (
+        <Text>
+          {`Sorry, '${email}' is an invalid email. Please provide a correct email to continue.`}
+        </Text>
+      );
+    }
+    return <Text />;
   };
 
   render() {
@@ -110,9 +107,11 @@ export default class LoginScreen extends React.Component {
         <Text style={styles.paragraph}>Login</Text>
         <RkTextInput
           placeholder="email"
+          defaultValue="user1@example.com"
           onChangeText={email =>
             this.setState({ email, invalidEmailSubmitted: false })
           }
+          autoCapitalize="none"
         />
         <RkButton
           rkType="primary xlarge"

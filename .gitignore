@@ -60,5 +60,13 @@ typings/
 # expo
 .expo
 
-# Challenge
-config.js
+# MovieClub
+/**/config.js
+app/playground
+**/*.zip
+**/*.gz
+**/*.tgz
+api/package*
+!api/package.json
+!api/package-lock.json
+/**/.DS_Store

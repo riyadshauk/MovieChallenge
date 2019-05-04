@@ -1,0 +1,37 @@
+
+{
+    "apiName":"movie_club",
+    "apiVersion":"1.0",
+    "apiId":"4b0e8f51-cde8-440d-b948-d7ff7f07e225",
+    "baseUrl":"https://250B93301C00455B8D2EEDB4C1EBBE58.aucom-east-1.oraclecloud.com:443",
+    "tokenEndpoint":"https://idcs-0c2a253b06e94fe98ccc70cc60003bd8.identity.oraclecloud.com/oauth2/v1/token",
+    "backend":{
+        "backendId":"<YOUR_BACKEND_ID>",
+        "backendName":"<YOUR_BACKEND_NAME>",
+        "backendVersion":"<YOUR_BACKEND_VERSION>",
+        "authorization":{
+            "anonymousKey":"<BACKEND_ANONYMOUS_KEY>",
+            "clientId":"<BACKEND_CLIENT_ID>",
+            "clientSecret":"<BACKEND_CLIENT_SECRET>"
+        }
+    },
+    "tools":{
+        "deployment":{
+            "tempDirectory":"c:\\tmp\\mcs-deploy"
+        },
+        "authorization":{
+            "clientId":"<OMCE_TM_APP_CLIENT_ID>",
+            "clientSecret":"<OMCE_TM_APP_CLIENT_SECRET>"
+        }
+    },
+    "container":{
+        "oracleMobileApiName":"OracleMobileAPI",
+        "port":4000
+    },
+    "tests":{
+        "user":{
+            "method":"GET",
+            "resource":"/user"
+        }
+    }
+}

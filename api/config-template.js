@@ -2,7 +2,7 @@
  * @note NOTE: This file (config-template.js) should be copied and renamed as config.js,
  * then modified accordingly.
  */
-import { Buffer } from 'buffer';
+const { Buffer } = require('buffer');
 
 const authorization = `Basic ${Buffer.from(
   'some-username:some-password'
@@ -10,7 +10,7 @@ const authorization = `Basic ${Buffer.from(
 
 const backendID = 'get this from OMCe webpage';
 
-export default {
+const config = {
   authorization,
   backendID,
   omceBaseURL: 'get this from OMCe webpage',
@@ -22,3 +22,5 @@ export default {
   omceAPIRoute: 'mobile/custom/movie_challenge',
   recommendationAPIURL: 'http://some_ip_address:1234'
 };
+
+module.exports = config;
