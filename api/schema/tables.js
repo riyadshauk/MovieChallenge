@@ -48,5 +48,19 @@ export default {
       { name: 'club_id', type: 'decimal' }
     ],
     requiredColumns: ['sender_id', 'recipient_id', 'club_id']
+  },
+  mentions: {
+    name: 'mentions',
+    columns: [
+      /**
+       * (eg, user.id)
+       */
+      { name: 'mentioner_id', type: 'decimal' },
+      { name: 'mentionee_id', type: 'decimal' },
+      /**
+       * (eg, club_comments.id)
+       */
+      { name: 'comment_id', type: 'decimal' }
+    ]
   }
 };

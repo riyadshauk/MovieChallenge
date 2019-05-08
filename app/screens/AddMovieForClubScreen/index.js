@@ -65,9 +65,9 @@ export default class AddMovieForClubScreen extends Component {
   addMovie = async () => {
     const { getParam } = this.props.navigation;
     const { getItem } = AsyncStorage;
-    const movie_id = getParam('id');
-    const club_id = getParam('club_id');
-    const user_id = await getItem('user_id');
+    const movie_id = Number(getParam('id'));
+    const club_id = Number(getParam('club_id'));
+    const user_id = Number(await getItem('user_id'));
     const time = new Date().toISOString();
     const addMovieToClub = `
       INSERT INTO "club_comments" ("club_id", "user_id", "parent_comment_id", "comment", "movie_id", "time")

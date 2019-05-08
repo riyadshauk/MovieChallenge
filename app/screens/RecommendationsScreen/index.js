@@ -18,7 +18,6 @@ import styles from './styles';
 import request, { requestRecommendationAPI } from '../../services/Api';
 import MovieListScreen from '../MovieListScreen';
 
-import config from '../../../config';
 import makeCancelable from '../../utils/makeCancelable';
 import MovieRow from '../../components/cards/rows/MovieRow';
 
@@ -151,15 +150,10 @@ export default class RecommendationsScreen extends MovieListScreen {
   fetchMovieRecommendations = async () => {
     return makeCancelable(
       new Promise(async (resolve, reject) => {
-        const options = {
-          method: 'get',
-          headers: config.headers,
-          json: true
-        };
         try {
           const { payload } = await requestRecommendationAPI(
             `recommendations?user_id=${this.state.currentUserID}`,
-            options
+            { method: 'get' }
           );
           resolve(payload);
         } catch (err) {

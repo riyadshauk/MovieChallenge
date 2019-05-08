@@ -9,6 +9,7 @@ import {
 import { createMaterialBottomTabNavigator } from 'react-navigation-material-bottom-tabs';
 
 import {
+  Ionicons,
   Feather,
   MaterialCommunityIcons,
   MaterialIcons
@@ -29,13 +30,15 @@ import RecommendationsScreen from './app/screens/RecommendationsScreen';
 import BrowseMoviesForClubScreen from './app/screens/BrowseMoviesForClubScreen';
 import AddMovieForClubScreen from './app/screens/AddMovieForClubScreen';
 import CreateClubScreen from './app/screens/CreateClubScreen';
+import MentionsScreen from './app/screens/MentionsScreen';
 
-const TitleMovieTab = 'Home';
+const TitleMovieTab = 'Movies';
 const TitleConfigTab = 'More';
 const TitleSearchTab = 'Search';
 const TitleRecommendationsTab = 'For You';
 const TitleWebView = 'Trailer';
 const TitleClubListTab = 'Clubs';
+const TitleMentionsTab = 'Mentions';
 
 const Login = createStackNavigator({
   Login: {
@@ -142,6 +145,33 @@ RecommendationsTab.navigationOptions = {
   )
 };
 
+const MentionsTab = createStackNavigator({
+  Mentions: {
+    screen: MentionsScreen,
+    navigationOptions: {
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  },
+  ClubThread: {
+    screen: ClubThreadScreen,
+    navigationOptions: {
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  }
+});
+
+MentionsTab.navigationOptions = {
+  tabBarIcon: ({ tintColor }) => (
+    <Ionicons name="ios-notifications" size={20} color={tintColor} />
+  )
+};
+
 const MoviesTab = createStackNavigator(
   {
     MovieList: {
@@ -181,7 +211,7 @@ const MoviesTab = createStackNavigator(
 
 MoviesTab.navigationOptions = {
   tabBarIcon: ({ tintColor }) => (
-    <Feather name="home" size={20} color={tintColor} />
+    <MaterialIcons name="explore" size={20} color={tintColor} />
   )
 };
 
@@ -277,6 +307,20 @@ const MovieListTabBarVisible = navigation => {
 };
 
 const bottomTabs = {
+  Clubs: {
+    screen: ClubListTab,
+    navigationOptions: ({ navigation }) => ({
+      title: TitleClubListTab,
+      tabBarVisible: MovieListTabBarVisible(navigation)
+    })
+  },
+  Recommendations: {
+    screen: RecommendationsTab,
+    navigationOptions: ({ navigation }) => ({
+      title: TitleRecommendationsTab,
+      tabBarVisible: MovieListTabBarVisible(navigation)
+    })
+  },
   Movie: {
     screen: MoviesTab,
     navigationOptions: ({ navigation }) => ({
@@ -291,17 +335,10 @@ const bottomTabs = {
       tabBarVisible: MovieListTabBarVisible(navigation)
     })
   },
-  Recommendations: {
-    screen: RecommendationsTab,
+  Mentions: {
+    screen: MentionsTab,
     navigationOptions: ({ navigation }) => ({
-      title: TitleRecommendationsTab,
-      tabBarVisible: MovieListTabBarVisible(navigation)
-    })
-  },
-  Clubs: {
-    screen: ClubListTab,
-    navigationOptions: ({ navigation }) => ({
-      title: TitleClubListTab,
+      title: TitleMentionsTab,
       tabBarVisible: MovieListTabBarVisible(navigation)
     })
   },

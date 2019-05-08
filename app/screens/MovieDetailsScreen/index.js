@@ -1,5 +1,6 @@
-import React, { Component } from 'react';
-import { Picker, ScrollView, View, Text } from 'react-native';
+/* eslint-disable camelcase */
+import React, { Component, Fragment } from 'react';
+import { AsyncStorage, Picker, ScrollView, View, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import ReadMore from 'react-native-read-more-text';
 import { RkButton } from 'react-native-ui-kitten';
@@ -25,7 +26,8 @@ import { darkBlue } from '../../styles/Colors';
 import styles from './styles';
 
 import config from '../../../config';
-import { getItem } from '../../utils/AsyncStorage';
+
+const { getItem } = AsyncStorage;
 
 const uninformed = 'Uninformed';
 
@@ -64,13 +66,24 @@ export default class MovieDetailsScreen extends Component {
     isVisible: false,
     showImage: false,
     creditId: null,
-    rating: 50,
-    user_id: undefined
+    rating: 5,
+    user_id: undefined,
+    previouslySubmittedRating: 'None'
   };
 
   async componentDidMount() {
     this.props.navigation.setParams({ actionShare: this.actionShare });
-    this.setState({ user_id: await getItem('user_id') });
+    // @todo why can't this be combined with the next setState without an exception being thrown..?
+    this.setState({
+      user_id: Number(await getItem('user_id')),
+      previouslySubmittedRating: await this.fetchPreviouslySubmittedRating()
+    });
+    this.setState(prevState => ({
+      rating:
+        prevState.previouslySubmittedRating !== 'None'
+          ? prevState.previouslySubmittedRating
+          : prevState.rating
+    }));
     this.requestMoviesInfo();
   }
 
@@ -81,7 +94,9 @@ export default class MovieDetailsScreen extends Component {
       this.state.showImage !== nextState.showImage ||
       this.state.isLoading !== nextState.isLoading ||
       this.state.isError !== nextState.isError ||
-      this.state.rating !== nextState.rating
+      this.state.rating !== nextState.rating ||
+      this.state.previouslySubmittedRating !==
+        nextState.previouslySubmittedRating
     ) {
       return true;
     }
@@ -251,18 +266,24 @@ export default class MovieDetailsScreen extends Component {
     return new Promise(async (resolve, reject) => {
       const body = {
         movie_id: this.props.navigation.state.params.id,
-        user_id: this.state.user_id
+        user_id: this.state.user_id,
+        rating: Number(this.state.rating)
       };
       const options = {
         method: 'post',
-        headers: config.headers,
-        json: true,
+        headers: {
+          ...config.headers,
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(body)
       };
       try {
         const data = await requestRecommendationAPI('ratings', options);
         resolve(data);
       } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err && err.stack ? err.stack : err);
         reject(err.stack);
       }
     });
@@ -270,21 +291,42 @@ export default class MovieDetailsScreen extends Component {
 
   RatingPicker = () => {
     return (
-      <Picker
-        selectedValue={this.state.rating}
-        style={styles.picker}
-        onValueChange={rating => this.setState({ rating })}
-      >
-        {[...Array(101)].map((v, i) => (
-          <Picker.Item
-            // eslint-disable-next-line react/no-array-index-key
-            key={i}
-            label={String(i / 10)}
-            value={i}
-          />
-        ))}
-      </Picker>
+      <Fragment>
+        <Text style={styles.previousRating}>
+          {`Your Previously Submitted Rating: ${
+            this.state.previouslySubmittedRating
+          }`}
+        </Text>
+        <Picker
+          selectedValue={this.state.rating}
+          style={styles.picker}
+          onValueChange={rating => this.setState({ rating })}
+        >
+          {[...Array(11)].map((v, i) => (
+            <Picker.Item
+              // eslint-disable-next-line react/no-array-index-key
+              key={i}
+              label={String(i)}
+              value={i}
+            />
+          ))}
+        </Picker>
+      </Fragment>
     );
+  };
+
+  fetchPreviouslySubmittedRating = async () => {
+    const { getParam } = this.props.navigation;
+    const ratings = (await requestRecommendationAPI(
+      `ratings?user_id=${await getItem('user_id')}`,
+      { method: 'get' }
+    )).payload;
+    // eslint-disable-next-line camelcase
+    const movie_id = getParam('id');
+    for (let i = 0; i < ratings.length; i += 1)
+      // eslint-disable-next-line camelcase
+      if (ratings[i].movie_id === movie_id) return ratings[i].user_rating;
+    return -1;
   };
 
   render() {
@@ -334,11 +376,15 @@ export default class MovieDetailsScreen extends Component {
               <this.RatingPicker />
               <RkButton
                 rkType="xlarge"
-                onPress={() =>
+                onPress={async () => {
                   this.setState({
                     updateUserRatingRequest: this.updateUserRating()
-                  })
-                }
+                  });
+                  await this.state.updateUserRatingRequest;
+                  this.setState(prevState => ({
+                    previouslySubmittedRating: prevState.rating
+                  }));
+                }}
               >
                 <Text>Rate This Movie</Text>
               </RkButton>

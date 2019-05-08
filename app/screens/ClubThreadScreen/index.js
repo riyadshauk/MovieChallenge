@@ -6,7 +6,10 @@ import PropTypes from 'prop-types';
 
 import styles from './styles';
 import makeCancelable from '../../utils/makeCancelable';
-import request, { requestDB } from '../../services/Api';
+import request, {
+  requestDB,
+  requestRecommendationAPI
+} from '../../services/Api';
 
 /**
  * @author Riyad Shauk
@@ -37,11 +40,19 @@ export default class ClubThreadScreen extends Component {
     selectedMovies: {},
     currentComment: '',
     currentCommentMovie: undefined,
-    isFetching: false
+    isFetching: false,
+    ratings: {}
+    // selectedComment: undefined
   };
 
   async componentDidMount() {
-    this.setState({ fetchMovieDataRequest: await this.fetchMovieData() });
+    const { getParam } = this.props.navigation;
+    const movie_id = getParam('movie_id');
+    this.toggleMovieInSelection(movie_id);
+    this.setState({
+      // selectedComment: getParam('comment_id'),
+      fetchMovieDataRequest: await this.fetchMovieData()
+    });
   }
 
   /**
@@ -102,6 +113,8 @@ export default class ClubThreadScreen extends Component {
     return makeCancelable(
       new Promise(async resolve => {
         const movieToComments = await (await this.fetchClubComments()).promise;
+        this.setState({ movieData: [] }); // clear this.state.movieData to avoid duplicates
+        // asynchronously update this.state.movieData
         Object.keys(movieToComments).forEach(async movie_id => {
           const movie = await request(`movie/${movie_id}`);
           this.setState(prevState => ({
@@ -113,6 +126,28 @@ export default class ClubThreadScreen extends Component {
     );
   };
 
+  extractAndPostMentions = async ({ user_id, comment }, commentID) => {
+    /**
+     * @see https://stackoverflow.com/questions/39576/best-way-to-do-multi-row-insert-in-oracle#answer-93724
+     */
+    const insertManyMentions = `${(comment.match(/(@user\d+)/g) || []).reduce(
+      (acc, mention) =>
+        `${acc} INTO "mentions" ("mentioner_id", "mentionee_id", "comment_id")
+          VALUES (${user_id}, ${mention.replace(
+          '@user',
+          ''
+        )}, ${commentID})`.replace(/\s+/g, ' '),
+      `INSERT ALL`
+    )} SELECT 1 FROM DUAL`;
+    if (insertManyMentions === 'INSERT ALL SELECT 1 FROM DUAL') return;
+    try {
+      await requestDB({ method: 'sql', sql: insertManyMentions });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err && err.stack ? err.stack : err);
+    }
+  };
+
   // @todo extract in separate component?
   postComment = async () => {
     const { getParam } = this.props.navigation;
@@ -122,17 +157,59 @@ export default class ClubThreadScreen extends Component {
       user_id: Number(await getItem('user_id')),
       parent_comment_id: Number(0),
       comment: this.state.currentComment,
-      movie_id: Number(this.state.currentCommentMovie)
+      movie_id: Number(this.state.currentCommentMovie),
+      time: new Date().toISOString()
     };
-    const response = await requestDB({
-      method: 'insert',
-      table: 'club_comments',
-      object: comment
-    });
-    // @todo handle errors more purposefully?
-    comment.id = response.id;
-    this.state.movieToComments[this.state.currentCommentMovie].push(comment);
-    this.forceUpdate();
+    try {
+      /**
+       * @note NOTE: using 'insert' from the databaseAccess Platform API on Oracle Mobile Hub
+       * is not the same as writing an Oracle SQL query with an INSERT statement.
+       */
+      const insertComment = `
+        INSERT INTO "club_comments" ("club_id", "user_id", "parent_comment_id", "comment", "movie_id", "time")
+        VALUES (${comment.club_id}, ${comment.user_id}, ${
+        comment.parent_comment_id
+      }, '${comment.comment}', ${comment.movie_id}, '${comment.time}')
+      `
+        .replace(/\s+/g, ' ')
+        .trim();
+      await requestDB({ method: 'sql', sql: insertComment });
+      /**
+       * There seems to be a bug in the Database Access API on Oracle Mobile Hub.
+       * For some reason, the response gives me a rowCount property, but doesn't
+       * give me the rows inserted with the generated "id" column.
+       * @see https://docs.oracle.com/en/cloud/paas/mobile-hub/develop/calling-apis-custom-code.html#GUID-C691A53F-CC59-4D0E-B225-E2F3411E3DB1
+       * @see https://docs.oracle.com/en/cloud/paas/mobile-hub/develop/calling-apis-custom-code.html#GUID-13F8DCD4-2040-4A5F-9E23-0DC87C823DD6
+       *
+       * Instead, I'm using a PL/SQL query (since it uses the procedure `to_char`)
+       * @see https://stackoverflow.com/questions/12980038/ora-00932-inconsistent-datatypes-expected-got-clob#31035525
+       */
+      const selectCommentID = `
+        SELECT "id"
+        FROM "club_comments"
+        WHERE to_char("club_comments"."time") = '${comment.time}'
+      `
+        .replace(/\s+/g, ' ')
+        .trim();
+      const [{ id }] = (await requestDB({
+        method: 'sql',
+        sql: selectCommentID
+      })).items;
+      comment.id = id;
+      this.extractAndPostMentions(comment, id);
+      this.setState(prevState => ({
+        movieToComments: {
+          ...prevState.movieToComments,
+          [prevState.currentCommentMovie]: [
+            ...prevState.movieToComments[prevState.currentCommentMovie],
+            comment
+          ]
+        }
+      }));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err && err.stack ? err.stack : err);
+    }
   };
 
   onRefresh = async () => {
@@ -141,24 +218,131 @@ export default class ClubThreadScreen extends Component {
     this.setState({ isFetching: false });
   };
 
+  fetchRatings = async user_id => {
+    const userRatings = (await requestRecommendationAPI(
+      `ratings?user_id=${user_id}`,
+      { method: 'get' }
+    )).payload;
+    this.setState(prevState => ({
+      ratings: {
+        ...prevState.ratings,
+        // @todo why can't async/await be used in here without an exception being thrown..?
+        [user_id]: userRatings
+      }
+    }));
+  };
+
+  /**
+   * Contrary to the notion of a 'getter' being purely functional:
+   * This may have side-effects (by conditionally calling this.fetchRatings).
+   */
+  getRating = (user_id, movie_id) => {
+    const userRatings = this.state.ratings[user_id];
+    for (let i = 0; userRatings !== undefined && i < userRatings.length; i += 1)
+      if (userRatings[i].movie_id === movie_id)
+        return userRatings[i].user_rating;
+    if (!this.state.ratings.hasOwnProperty(user_id))
+      // async fetch ratings into this.state.ratings, eventually triggering a re-render
+      this.fetchRatings(user_id);
+    return -1;
+  };
+
+  /**
+   * This does a bit more than merely displaying a rating...
+   *
+   * The first time this component is rendered with a unique user_id,
+   * there will be no ratings yet fetched for that user_id,
+   * so it will ultimately fetch any ratings for that user_id,
+   * and will initially render no text.
+   *
+   * When this.state.ratings gets updated from the fetch,
+   * it will re-render with a rating iff the user has posted a rating for movie_id.
+   */
+  DisplayRating = ({ user_id, movie_id }) => {
+    const rating = this.getRating(user_id, movie_id);
+    if (rating === -1) return <Text />;
+    return <Text>{` | (rating: ${rating})`}</Text>;
+  };
+
+  MakeAComment = ({ movie_id }) => (
+    <Fragment>
+      <RkTextInput
+        placeholder="comment"
+        onChangeText={currentComment =>
+          this.setState({
+            currentComment,
+            currentCommentMovie: movie_id
+          })
+        }
+        autoCapitalize="none"
+      />
+      <RkButton rkType="primary xlarge" onPress={this.postComment}>
+        <Text>Send</Text>
+      </RkButton>
+    </Fragment>
+  );
+
+  MovieThread = ({ movie_id }) => {
+    const { movieToComments } = this.state;
+    return (
+      <Fragment>
+        {movieToComments[movie_id].map(comment => (
+          <Fragment key={String(comment.id)}>
+            <Text style={styles.commentDate}>
+              {`${new Date(comment.time)}`}
+              <this.DisplayRating
+                user_id={comment.user_id}
+                movie_id={movie_id}
+              />
+            </Text>
+            <Text style={styles.commentTextContainer}>
+              <Text style={styles.commentUserName}>{`user${
+                comment.user_id
+              } `}</Text>
+              <Text style={styles.commentText}>{comment.comment}</Text>
+            </Text>
+          </Fragment>
+        ))}
+        <this.MakeAComment movie_id={movie_id} />
+      </Fragment>
+    );
+  };
+
+  toggleMovieInSelection = movie_id => {
+    if (this.state.selectedMovies.hasOwnProperty(movie_id)) {
+      this.setState(prevState => ({
+        selectedMovies: {
+          ...prevState.selectedMovies,
+          [movie_id]: !prevState.selectedMovies[movie_id]
+        }
+      }));
+    } else {
+      this.setState(prevState => ({
+        selectedMovies: {
+          ...prevState.selectedMovies,
+          [movie_id]: true
+        }
+      }));
+    }
+  };
+
   render() {
-    const { isFetching, movieToComments, selectedMovies } = this.state;
+    const { isFetching, selectedMovies } = this.state;
     const { getParam, navigate } = this.props.navigation;
+    const [club_id, clubName] = [
+      getParam('club_id', '0'),
+      getParam('clubName')
+    ];
     return (
       <View style={styles.container}>
         <Button
           title="Add/Remove Movie"
-          onPress={async () =>
-            navigate('BrowseMoviesForClub', {
-              club_id: getParam('club_id', '0'),
-              clubName: getParam('clubName')
-            })
-          }
+          onPress={() => navigate('BrowseMoviesForClub', { club_id, clubName })}
         />
         <FlatList
-          data={this.state.movieData.map(movie => ({
-            key: movie.title,
-            id: movie.id
+          data={this.state.movieData.map(({ title, id }) => ({
+            key: title,
+            id
           }))}
           onRefresh={() => this.onRefresh()}
           refreshing={isFetching}
@@ -166,49 +350,10 @@ export default class ClubThreadScreen extends Component {
             <Fragment>
               <Button
                 title={item.key}
-                onPress={() => {
-                  if (this.state.selectedMovies.hasOwnProperty(item.id)) {
-                    this.setState(prevState => ({
-                      selectedMovies: {
-                        ...prevState.selectedMovies,
-                        [item.id]: !prevState.selectedMovies[item.id]
-                      }
-                    }));
-                  } else {
-                    this.setState(prevState => ({
-                      selectedMovies: {
-                        ...prevState.selectedMovies,
-                        [item.id]: true
-                      }
-                    }));
-                  }
-                }}
+                onPress={() => this.toggleMovieInSelection(item.id)}
               />
-              {// @todo extract to separate component?
-              selectedMovies[item.id] ? (
-                <Fragment>
-                  {movieToComments[item.id].map(comment => (
-                    <Text key={comment.id}>
-                      {`user${comment.user_id}: ${comment.comment}`}
-                    </Text>
-                  ))}
-                  <RkTextInput
-                    placeholder="comment"
-                    onChangeText={currentComment =>
-                      this.setState({
-                        currentComment,
-                        currentCommentMovie: item.id
-                      })
-                    }
-                    autoCapitalize="none"
-                  />
-                  <RkButton
-                    rkType="primary xlarge"
-                    onPress={() => this.postComment()}
-                  >
-                    <Text>Send</Text>
-                  </RkButton>
-                </Fragment>
+              {selectedMovies[item.id] ? (
+                <this.MovieThread movie_id={item.id} />
               ) : (
                 undefined
               )}

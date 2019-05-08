@@ -1,22 +1,6 @@
 import { StyleSheet } from 'react-native';
-import { lightGreen } from '../../styles/Colors';
 
 export default StyleSheet.create({
-  commentDate: {
-    fontSize: 10
-  },
-  commentTextContainer: {
-    marginBottom: 10,
-    marginLeft: 5,
-    marginTop: 5,
-    fontSize: 16
-  },
-  commentText: {
-    color: '#3366cc'
-  },
-  commentUserName: {
-    color: lightGreen
-  },
   container: {
     flex: 1,
     justifyContent: 'center',

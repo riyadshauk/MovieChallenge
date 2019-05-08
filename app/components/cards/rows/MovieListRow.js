@@ -12,7 +12,8 @@ const MovieListRow = ({
   ListFooterComponent,
   ListEmptyComponent,
   navigate,
-  renderItem
+  renderItem,
+  userRatings
 }) => (
   <FlatList
     data={data}
@@ -27,6 +28,7 @@ const MovieListRow = ({
     renderItem={({ item }) =>
       renderItem(item, type, isSearch, numColumns, navigate)
     }
+    extraData={userRatings} // @see https://stackoverflow.com/questions/43397803/how-to-re-render-flatlist#answer-44599204
   />
 );
 

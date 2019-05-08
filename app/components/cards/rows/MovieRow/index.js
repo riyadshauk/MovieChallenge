@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
 import { View, Text } from 'react-native';
 
 import Image from 'react-native-scalable-image';
@@ -41,24 +41,36 @@ const renderDivider = (releaseDate, originalLanguage) =>
     <Text style={styles.trace}>|</Text>
   ) : null;
 
-const renderScore = voteAverage => {
-  const color =
-    voteAverage < 5
-      ? 'low'
-      : voteAverage >= 5 && voteAverage < 7
-      ? 'mid'
-      : 'high';
+const renderScore = rating => {
+  if (rating === undefined) {
+    return (
+      <View style={[styles.score, styles.low]}>
+        <Text style={styles.textPercent}>None</Text>
+      </View>
+    );
+  }
+  const color = rating < 5 ? 'low' : rating >= 5 && rating < 7 ? 'mid' : 'high';
 
   return (
     <View style={[styles.score, styles[color]]}>
-      <Text style={styles.textPercent}>{voteAverage}</Text>
+      <Text style={styles.textPercent}>{rating}</Text>
     </View>
   );
 };
 
-export default class MovieRow extends React.PureComponent {
+export default class MovieRow extends PureComponent {
   render() {
-    const { numColumns, item, type, isSearch, navigate } = this.props;
+    const {
+      numColumns,
+      item,
+      type,
+      isSearch,
+      navigate,
+      userRatings
+    } = this.props;
+
+    const userRating =
+      userRatings !== undefined ? userRatings[item.id] : undefined;
 
     if (numColumns === 1) {
       return (
@@ -87,6 +99,11 @@ export default class MovieRow extends React.PureComponent {
               </Text>
             </View>
             <View style={[styles.textRow, styles.containerReview]}>
+              <Text>your rating ➝ </Text>
+              {renderScore(userRating)}
+            </View>
+            <View style={[styles.textRow, styles.containerReview]}>
+              <Text>rating ➝ </Text>
               {renderScore(item.vote_average)}
             </View>
           </View>

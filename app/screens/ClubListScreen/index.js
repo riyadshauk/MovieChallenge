@@ -4,7 +4,9 @@ import {
   AsyncStorage,
   Button,
   View,
-  FlatList
+  FlatList,
+  Text,
+  TouchableOpacity
 } from 'react-native';
 import PropTypes from 'prop-types';
 
@@ -92,19 +94,23 @@ export default class CreateClubScreen extends React.Component {
     const { navigate } = this.props.navigation;
     return (
       <View style={styles.container}>
-        <Button
-          title="Explore Clubs"
+        <TouchableOpacity
+          style={styles.explore}
           onPress={() => navigate('JoinClub', { clubNames })}
-        />
-        <Button
-          title="Create a Club"
+        >
+          <Text>Explore Clubs</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.create}
           onPress={() => navigate('CreateClub', {})}
-        />
+        >
+          <Text>Create a Club</Text>
+        </TouchableOpacity>
         {isFetching ? <ActivityIndicator /> : undefined}
         <FlatList
           data={this.state.clubNames.map(clubName => ({
             key: clubName.name,
-            club_id: clubName.id
+            club_id: clubName.club_id
           }))}
           onRefresh={() => this.onRefresh()}
           refreshing={isFetching}
@@ -119,6 +125,7 @@ export default class CreateClubScreen extends React.Component {
               }}
             />
           )}
+          style={styles.flatlist}
         />
       </View>
     );

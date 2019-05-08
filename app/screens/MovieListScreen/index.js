@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Asset } from 'expo';
-import { View, Text } from 'react-native';
+import { AsyncStorage, View, Text } from 'react-native';
 
 import { Feather } from '@expo/vector-icons';
 import { Assets as StackAssets } from 'react-navigation-stack';
@@ -12,7 +12,7 @@ import MovieListRow from '../../components/cards/rows/MovieListRow';
 import MovieRow from '../../components/cards/rows/MovieRow';
 import { TouchableOpacity } from '../../components/common/TouchableOpacity';
 
-import request from '../../services/Api';
+import request, { requestRecommendationAPI } from '../../services/Api';
 
 import { getItem } from '../../utils/AsyncStorage';
 import { darkBlue } from '../../styles/Colors';
@@ -47,7 +47,8 @@ export default class MovieListScreen extends Component {
     results: [],
     page: 1,
     numColumns: 1,
-    keyGrid: 1
+    keyGrid: 1,
+    userRatings: undefined
   };
 
   async componentDidMount() {
@@ -60,6 +61,8 @@ export default class MovieListScreen extends Component {
       this.setState({ hasAdultContent }, () => {
         this.requestMoviesList();
       });
+
+      this.fetchUserRatings();
     } catch (error) {
       this.requestMoviesList();
     }
@@ -73,7 +76,8 @@ export default class MovieListScreen extends Component {
       isRefresh,
       isLoadingMore,
       isError,
-      keyGrid
+      keyGrid,
+      userRatings
     } = this.state;
 
     if (
@@ -83,7 +87,8 @@ export default class MovieListScreen extends Component {
       isRefresh !== nextState.isRefresh ||
       isLoadingMore !== nextState.isLoadingMore ||
       isError !== nextState.isError ||
-      keyGrid !== nextState.keyGrid
+      keyGrid !== nextState.keyGrid ||
+      userRatings !== nextState.userRatings
     ) {
       return true;
     }
@@ -123,8 +128,30 @@ export default class MovieListScreen extends Component {
     }
   };
 
+  fetchUserRatings = async () => {
+    // eslint-disable-next-line no-shadow
+    const { getItem } = AsyncStorage;
+    const userID = await getItem('user_id');
+    const userRatingsRows = (await requestRecommendationAPI(
+      `ratings?user_id=${userID}`,
+      { method: 'get' }
+    )).payload;
+    const userRatings = {};
+    // eslint-disable-next-line camelcase
+    userRatingsRows.forEach(({ movie_id, user_rating }) => {
+      // eslint-disable-next-line camelcase
+      userRatings[movie_id] = user_rating;
+    });
+    this.setState({ userRatings });
+    return userRatings;
+  };
+
   renderItem = (item, type, isSearch, numColumns, navigate) => {
     const { id, movieID, senderName } = item;
+
+    const { userRatings } = this.state;
+    const userRating =
+      userRatings !== undefined ? userRatings[movieID || id] : undefined;
     return (
       <TouchableOpacity
         onPress={() =>
@@ -140,6 +167,8 @@ export default class MovieListScreen extends Component {
           isSearch={isSearch}
           numColumns={numColumns}
           navigate={navigate}
+          userRating={userRating}
+          userRatings={userRatings}
         />
       </TouchableOpacity>
     );
@@ -229,12 +258,15 @@ export default class MovieListScreen extends Component {
       isVisible,
       filterType,
       numColumns,
-      keyGrid
+      keyGrid,
+      userRatings
     } = this.state;
-
     return (
       <View style={styles.container}>
-        {isLoading && !isRefresh && !isLoadingMore ? (
+        {isLoading &&
+        !isRefresh &&
+        !isLoadingMore &&
+        userRatings === undefined ? (
           <Spinner />
         ) : isError ? (
           <NotificationCard
@@ -275,6 +307,7 @@ export default class MovieListScreen extends Component {
               ListFooterComponent={this.renderFooter}
               navigate={navigate}
               renderItem={this.renderItem}
+              userRatings={this.state.userRatings}
             />
           </View>
         )}

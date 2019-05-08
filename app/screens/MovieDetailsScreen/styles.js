@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { white, pink, blue, darkBlue } from '../../styles/Colors';
+import { white, pink, blue, darkBlue, lightGreen } from '../../styles/Colors';
 import { fontSizeResponsive } from '../../utils/Metrics';
 
 const styles = StyleSheet.create({
@@ -45,6 +45,9 @@ const styles = StyleSheet.create({
   },
   picker: {
     width: 300
+  },
+  previousRating: {
+    color: lightGreen
   }
 });
 

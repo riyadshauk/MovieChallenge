@@ -3,20 +3,32 @@ import https from 'https';
 import clubs from './clubs';
 import { numUsers } from './users';
 
+const generateUserMention = () => `@user${Math.round(Math.random() * 41 + 1)}`;
+
+/**
+ * This will result in a less desireable situation,
+ * where a user is mentioned who isn't actually in the club
+ * @param {*} dataOnMovie
+ */
+// eslint-disable-next-line no-unused-vars
+const someMentions = dataOnMovie => [
+  `${generateUserMention()} cool`,
+  `${generateUserMention()} wassup`,
+  `${generateUserMention()} Does this remind you of other movies we've recently seen?`,
+  `${generateUserMention()} Want to go for action/adventure next time?!`
+];
+
 const someComments = dataOnMovie => [
-  'cool',
-  'wassup',
   `That was an awesome movie –– I highly recommend ${dataOnMovie.title}!`,
   `What did you guys think about ${dataOnMovie.title}?`,
   `Want to watch ${dataOnMovie.title} again?!`,
   `What rating would you guys give ${dataOnMovie.title}?`,
-  "Does this remind you of other movies we've recently seen?",
-  'Want to go for action/adventure next time?!',
   `But was ${dataOnMovie.title} as good as Avengers?!`,
   'Nice watch with the wife',
   'Great movie for kids and family',
   `${dataOnMovie.title} was awesome!!`,
-  `Anybody want to watch ${dataOnMovie.title} again?!`
+  `Anybody want to watch ${dataOnMovie.title} again?!`,
+  ...someMentions(dataOnMovie)
 ];
 const someReplies = dataOnMovie => [
   'Totally!',
