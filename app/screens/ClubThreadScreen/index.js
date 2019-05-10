@@ -1,6 +1,13 @@
 /* eslint-disable camelcase */
 import React, { Component, Fragment } from 'react';
-import { AsyncStorage, Button, FlatList, Text, View } from 'react-native';
+import {
+  AsyncStorage,
+  Button,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { RkTextInput, RkButton } from 'react-native-ui-kitten';
 import PropTypes from 'prop-types';
 
@@ -149,87 +156,100 @@ export default class ClubThreadScreen extends Component {
   };
 
   // @todo extract in separate component?
-  postComment = async () => {
-    const { getParam } = this.props.navigation;
-    const { getItem } = AsyncStorage;
-    const comment = {
-      club_id: Number(getParam('club_id', '0')),
-      user_id: Number(await getItem('user_id')),
-      parent_comment_id: Number(0),
-      comment: this.state.currentComment,
-      movie_id: Number(this.state.currentCommentMovie),
-      time: new Date().toISOString()
-    };
-    try {
-      /**
-       * @note NOTE: using 'insert' from the databaseAccess Platform API on Oracle Mobile Hub
-       * is not the same as writing an Oracle SQL query with an INSERT statement.
-       */
-      const insertComment = `
-        INSERT INTO "club_comments" ("club_id", "user_id", "parent_comment_id", "comment", "movie_id", "time")
-        VALUES (${comment.club_id}, ${comment.user_id}, ${
-        comment.parent_comment_id
-      }, '${comment.comment}', ${comment.movie_id}, '${comment.time}')
-      `
-        .replace(/\s+/g, ' ')
-        .trim();
-      await requestDB({ method: 'sql', sql: insertComment });
-      /**
-       * There seems to be a bug in the Database Access API on Oracle Mobile Hub.
-       * For some reason, the response gives me a rowCount property, but doesn't
-       * give me the rows inserted with the generated "id" column.
-       * @see https://docs.oracle.com/en/cloud/paas/mobile-hub/develop/calling-apis-custom-code.html#GUID-C691A53F-CC59-4D0E-B225-E2F3411E3DB1
-       * @see https://docs.oracle.com/en/cloud/paas/mobile-hub/develop/calling-apis-custom-code.html#GUID-13F8DCD4-2040-4A5F-9E23-0DC87C823DD6
-       *
-       * Instead, I'm using a PL/SQL query (since it uses the procedure `to_char`)
-       * @see https://stackoverflow.com/questions/12980038/ora-00932-inconsistent-datatypes-expected-got-clob#31035525
-       */
-      const selectCommentID = `
-        SELECT "id"
-        FROM "club_comments"
-        WHERE to_char("club_comments"."time") = '${comment.time}'
-      `
-        .replace(/\s+/g, ' ')
-        .trim();
-      const [{ id }] = (await requestDB({
-        method: 'sql',
-        sql: selectCommentID
-      })).items;
-      comment.id = id;
-      this.extractAndPostMentions(comment, id);
-      this.setState(prevState => ({
-        movieToComments: {
-          ...prevState.movieToComments,
-          [prevState.currentCommentMovie]: [
-            ...prevState.movieToComments[prevState.currentCommentMovie],
-            comment
-          ]
+  postComment = () => {
+    return makeCancelable(
+      new Promise(async resolve => {
+        const { getParam } = this.props.navigation;
+        const { getItem } = AsyncStorage;
+        const comment = {
+          club_id: Number(getParam('club_id', '0')),
+          user_id: Number(await getItem('user_id')),
+          parent_comment_id: Number(0),
+          comment: this.state.currentComment,
+          movie_id: Number(this.state.currentCommentMovie),
+          time: new Date().toISOString()
+        };
+        try {
+          /**
+           * @note NOTE: using 'insert' from the databaseAccess Platform API on Oracle Mobile Hub
+           * is not the same as writing an Oracle SQL query with an INSERT statement.
+           */
+          const insertComment = `
+            INSERT INTO "club_comments" ("club_id", "user_id", "parent_comment_id", "comment", "movie_id", "time")
+            VALUES (${comment.club_id}, ${comment.user_id}, ${
+            comment.parent_comment_id
+          }, '${comment.comment}', ${comment.movie_id}, '${comment.time}')
+          `
+            .replace(/\s+/g, ' ')
+            .trim();
+          await requestDB({ method: 'sql', sql: insertComment });
+          /**
+           * There seems to be a bug in the Database Access API on Oracle Mobile Hub.
+           * For some reason, the response gives me a rowCount property, but doesn't
+           * give me the rows inserted with the generated "id" column.
+           * @see https://docs.oracle.com/en/cloud/paas/mobile-hub/develop/calling-apis-custom-code.html#GUID-C691A53F-CC59-4D0E-B225-E2F3411E3DB1
+           * @see https://docs.oracle.com/en/cloud/paas/mobile-hub/develop/calling-apis-custom-code.html#GUID-13F8DCD4-2040-4A5F-9E23-0DC87C823DD6
+           *
+           * Instead, I'm using a PL/SQL query (since it uses the procedure `to_char`)
+           * @see https://stackoverflow.com/questions/12980038/ora-00932-inconsistent-datatypes-expected-got-clob#31035525
+           */
+          const selectCommentID = `
+            SELECT "id"
+            FROM "club_comments"
+            WHERE to_char("club_comments"."time") = '${comment.time}'
+          `
+            .replace(/\s+/g, ' ')
+            .trim();
+          const [{ id }] = (await requestDB({
+            method: 'sql',
+            sql: selectCommentID
+          })).items;
+          comment.id = id;
+          this.extractAndPostMentions(comment, id);
+          this.setState(prevState => ({
+            movieToComments: {
+              ...prevState.movieToComments,
+              [prevState.currentCommentMovie]: [
+                ...prevState.movieToComments[prevState.currentCommentMovie],
+                comment
+              ]
+            }
+          }));
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error(err && err.stack ? err.stack : err);
         }
-      }));
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err && err.stack ? err.stack : err);
-    }
+        resolve();
+      })
+    );
   };
 
   onRefresh = async () => {
     this.setState({ isFetching: true });
+    const { getItem } = AsyncStorage;
+    const user_id = await getItem('user_id');
+    this.fetchRatings(user_id);
     this.setState({ fetchMovieDataRequest: await this.fetchMovieData() });
     this.setState({ isFetching: false });
   };
 
   fetchRatings = async user_id => {
-    const userRatings = (await requestRecommendationAPI(
-      `ratings?user_id=${user_id}`,
-      { method: 'get' }
-    )).payload;
-    this.setState(prevState => ({
-      ratings: {
-        ...prevState.ratings,
-        // @todo why can't async/await be used in here without an exception being thrown..?
-        [user_id]: userRatings
-      }
-    }));
+    return makeCancelable(
+      new Promise(async resolve => {
+        const userRatings = (await requestRecommendationAPI(
+          `ratings?user_id=${user_id}`,
+          { method: 'get' }
+        )).payload;
+        this.setState(prevState => ({
+          ratings: {
+            ...prevState.ratings,
+            // @todo why can't async/await be used in here without an exception being thrown..?
+            [user_id]: userRatings
+          }
+        }));
+        resolve();
+      })
+    );
   };
 
   /**
@@ -346,14 +366,27 @@ export default class ClubThreadScreen extends Component {
           }))}
           onRefresh={() => this.onRefresh()}
           refreshing={isFetching}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <Fragment>
-              <Button
-                title={item.key}
+              <TouchableOpacity
                 onPress={() => this.toggleMovieInSelection(item.id)}
-              />
+                style={{
+                  ...styles.backgroundColor(index),
+                  ...styles.movieTitle
+                }}
+              >
+                <Text>{item.key}</Text>
+              </TouchableOpacity>
               {selectedMovies[item.id] ? (
-                <this.MovieThread movie_id={item.id} />
+                <Fragment>
+                  <TouchableOpacity
+                    style={styles.movieDetails}
+                    onPress={() => navigate('MovieDetails', { id: item.id })}
+                  >
+                    <Text>View details / rate movie</Text>
+                  </TouchableOpacity>
+                  <this.MovieThread movie_id={item.id} />
+                </Fragment>
               ) : (
                 undefined
               )}

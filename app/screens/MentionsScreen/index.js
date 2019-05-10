@@ -3,15 +3,39 @@ import React from 'react';
 import {
   ActivityIndicator,
   AsyncStorage,
-  Button,
   View,
-  FlatList
+  FlatList,
+  Text,
+  TouchableOpacity
 } from 'react-native';
 import PropTypes from 'prop-types';
 
 import styles from './styles';
 import makeCancelable from '../../utils/makeCancelable';
 import { requestDB } from '../../services/Api';
+
+const getTimeSince = time => {
+  // @ts-ignore
+  let secondsAgo = (new Date() - new Date(time)) / 1000;
+  let timeAgo = '';
+  if (secondsAgo >= 3600 * 24) {
+    const interval = Math.floor(secondsAgo / (3600 * 24));
+    timeAgo += ` ${interval}d`;
+    secondsAgo -= interval * 3600 * 24;
+  }
+  if (secondsAgo >= 3600) {
+    const interval = Math.floor(secondsAgo / 3600);
+    timeAgo += ` ${interval}h`;
+    secondsAgo -= interval * 3600;
+  }
+  if (secondsAgo >= 60) {
+    const interval = Math.floor(secondsAgo / 60);
+    timeAgo += ` ${interval}m`;
+    secondsAgo -= interval * 60;
+  }
+  timeAgo += ` ${Math.round(secondsAgo % 60)}s`;
+  return timeAgo.trim();
+};
 
 /**
  * @author Riyad Shauk
@@ -72,10 +96,9 @@ export default class MentionsScreen extends React.Component {
               sql: getUserMentionedComments
             })).items || [];
           const club = {};
-          // eslint-disable-next-line no-return-assign
-          commentsUserIsMentionedIn.forEach(
-            comment => (club[comment.club_id] = true)
-          );
+          commentsUserIsMentionedIn.forEach(comment => {
+            club[comment.club_id] = true;
+          });
           const clubIDs = Object.keys(club);
           clubIDs.forEach(async club_id => {
             const queryClubNames = `
@@ -92,6 +115,9 @@ export default class MentionsScreen extends React.Component {
             this.setState(prevState => ({
               club: { ...prevState.club, [club_id]: name }
             }));
+          });
+          commentsUserIsMentionedIn.sort((a, b) => {
+            return new Date(a.time) < new Date(b.time) ? 1 : -1; // newest comment first
           });
           this.setState({ commentsUserIsMentionedIn });
           resolve(commentsUserIsMentionedIn);
@@ -116,13 +142,14 @@ export default class MentionsScreen extends React.Component {
         {isFetching ? <ActivityIndicator /> : undefined}
         <FlatList
           data={this.state.commentsUserIsMentionedIn.map(commentRow => {
-            const { comment, club_id, movie_id, id } = commentRow;
+            const { comment, club_id, movie_id, id, time } = commentRow;
+            const timeAgo = getTimeSince(time);
             return {
               key: `
-                [${this.state.club[club_id] || '...'}]
-                ${comment.substring(0, 30)}${comment.length > 30 ? '...' : ''}
+[${this.state.club[club_id] || '...'} | ${timeAgo} ago]
+${comment.substring(0, 30)}${comment.length > 30 ? '...' : ''}
               `
-                .replace(/\s+/g, ' ')
+                // .replace(/\s+/g, ' ')
                 .trim(),
               club_id,
               movie_id,
@@ -131,9 +158,8 @@ export default class MentionsScreen extends React.Component {
           })}
           onRefresh={() => this.onRefresh()}
           refreshing={isFetching}
-          renderItem={({ item }) => (
-            <Button
-              title={item.key}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
               onPress={() => {
                 navigate('ClubThread', {
                   clubName: item.key,
@@ -142,7 +168,10 @@ export default class MentionsScreen extends React.Component {
                   comment_id: item.comment_id
                 });
               }}
-            />
+              style={{ ...styles.backgroundColor(index), ...styles.mention }}
+            >
+              <Text>{item.key}</Text>
+            </TouchableOpacity>
           )}
         />
       </View>

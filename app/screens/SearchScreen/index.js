@@ -20,6 +20,13 @@ export default class SearchScreen extends Component {
       <View style={styles.container}>
         <Search typeRequest="search" navigate={navigate} />
         <ScrollView style={styles.containerList}>
+          <TouchableOpacity
+            style={styles.item}
+            key={-1}
+            onPress={() => navigate('MovieList', {})}
+          >
+            <Text style={styles.itemText}>Browse All Movies by Popularity</Text>
+          </TouchableOpacity>
           {Object.keys(genre).map(id => (
             <TouchableOpacity
               style={styles.item}

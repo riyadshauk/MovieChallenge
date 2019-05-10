@@ -9,6 +9,7 @@ import {
 import { createMaterialBottomTabNavigator } from 'react-navigation-material-bottom-tabs';
 
 import {
+  Entypo,
   Ionicons,
   Feather,
   MaterialCommunityIcons,
@@ -31,6 +32,8 @@ import BrowseMoviesForClubScreen from './app/screens/BrowseMoviesForClubScreen';
 import AddMovieForClubScreen from './app/screens/AddMovieForClubScreen';
 import CreateClubScreen from './app/screens/CreateClubScreen';
 import MentionsScreen from './app/screens/MentionsScreen';
+import ChatDialogueScreen from './app/screens/ChatDialogueScreen';
+import ChatUserListScreen from './app/screens/ChatUserListScreen';
 
 const TitleMovieTab = 'Movies';
 const TitleConfigTab = 'More';
@@ -39,6 +42,7 @@ const TitleRecommendationsTab = 'For You';
 const TitleWebView = 'Trailer';
 const TitleClubListTab = 'Clubs';
 const TitleMentionsTab = 'Mentions';
+const TitleChatTab = 'Chat';
 
 const Login = createStackNavigator({
   Login: {
@@ -95,6 +99,15 @@ const ClubListTab = createStackNavigator(
     },
     JoinClub: {
       screen: JoinClubScreen,
+      navigationOptions: {
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
+      }
+    },
+    MovieDetails: {
+      screen: MovieDetailsScreen,
       navigationOptions: {
         headerTintColor: '#47525E',
         headerStyle: {
@@ -172,6 +185,33 @@ MentionsTab.navigationOptions = {
   )
 };
 
+const ChatTab = createStackNavigator({
+  ChatUserList: {
+    screen: ChatUserListScreen,
+    navigationOptions: {
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  },
+  ChatDialogue: {
+    screen: ChatDialogueScreen,
+    navigationOptions: {
+      headerTintColor: '#47525E',
+      headerStyle: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  }
+});
+
+ChatTab.navigationOptions = {
+  tabBarIcon: ({ tintColor }) => (
+    <Entypo name="chat" size={20} color={tintColor} />
+  )
+};
+
 const MoviesTab = createStackNavigator(
   {
     MovieList: {
@@ -239,6 +279,16 @@ const SearchTab = createStackNavigator(
     MovieDetails: {
       screen: MovieDetailsScreen,
       navigationOptions: {
+        headerTintColor: '#47525E',
+        headerStyle: {
+          backgroundColor: '#ffffff'
+        }
+      }
+    },
+    MovieList: {
+      screen: MovieListScreen,
+      navigationOptions: {
+        title: TitleMovieTab,
         headerTintColor: '#47525E',
         headerStyle: {
           backgroundColor: '#ffffff'
@@ -321,13 +371,6 @@ const bottomTabs = {
       tabBarVisible: MovieListTabBarVisible(navigation)
     })
   },
-  Movie: {
-    screen: MoviesTab,
-    navigationOptions: ({ navigation }) => ({
-      title: TitleMovieTab,
-      tabBarVisible: MovieListTabBarVisible(navigation)
-    })
-  },
   Search: {
     screen: SearchTab,
     navigationOptions: ({ navigation }) => ({
@@ -339,6 +382,13 @@ const bottomTabs = {
     screen: MentionsTab,
     navigationOptions: ({ navigation }) => ({
       title: TitleMentionsTab,
+      tabBarVisible: MovieListTabBarVisible(navigation)
+    })
+  },
+  Chat: {
+    screen: ChatTab,
+    navigationOptions: ({ navigation }) => ({
+      title: TitleChatTab,
       tabBarVisible: MovieListTabBarVisible(navigation)
     })
   },

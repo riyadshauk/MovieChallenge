@@ -2,7 +2,6 @@ import React from 'react';
 import {
   ActivityIndicator,
   AsyncStorage,
-  Button,
   View,
   FlatList,
   Text,
@@ -114,16 +113,18 @@ export default class CreateClubScreen extends React.Component {
           }))}
           onRefresh={() => this.onRefresh()}
           refreshing={isFetching}
-          renderItem={({ item }) => (
-            <Button
-              title={item.key}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
               onPress={() => {
                 navigate('ClubThread', {
                   clubName: item.key,
                   club_id: item.club_id
                 });
               }}
-            />
+              style={{ ...styles.backgroundColor(index), ...styles.movieTitle }}
+            >
+              <Text>{item.key}</Text>
+            </TouchableOpacity>
           )}
           style={styles.flatlist}
         />

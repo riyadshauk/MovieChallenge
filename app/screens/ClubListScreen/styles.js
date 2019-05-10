@@ -1,10 +1,14 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
+  // @ts-ignore
+  backgroundColor: idx => {
+    const colors = ['#e6f2ff', '#e6fff2'];
+    return { backgroundColor: colors[idx % colors.length] };
+  },
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: 'center'
   },
   create: {
     padding: 10,
@@ -12,7 +16,8 @@ export default StyleSheet.create({
     margin: 3,
     position: 'absolute',
     right: 0,
-    top: 0
+    top: 0,
+    borderRadius: 100
   },
   explore: {
     left: 0,
@@ -20,7 +25,8 @@ export default StyleSheet.create({
     backgroundColor: '#3399ff',
     margin: 3,
     position: 'absolute',
-    top: 0
+    top: 0,
+    borderRadius: 100
   },
   item: {
     padding: 10,
@@ -31,11 +37,8 @@ export default StyleSheet.create({
     position: 'relative',
     top: 50
   },
-  paragraph: {
-    textAlign: 'center',
-    color: '#002f2f',
-    marginBottom: 5,
-    fontWeight: 'bold',
-    fontSize: 18
+  movieTitle: {
+    alignItems: 'center',
+    padding: 10
   }
 });

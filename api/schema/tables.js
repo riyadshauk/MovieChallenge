@@ -1,6 +1,11 @@
 /**
  * This file is only referenced by configure_omce_db.js
  */
+/**
+ * @todo when implementing DB at high-level, take a look at this screenshot of this System Design
+ * Video on how to design a chatting app like Messenger or Whatsapp by Tushar Roy (20 min in):
+ * @see https://www.youtube.com/embed/zKPNUMkwOJE?start=1230
+ */
 export default {
   user: {
     name: 'user',

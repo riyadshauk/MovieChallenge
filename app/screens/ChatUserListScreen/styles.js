@@ -7,11 +7,14 @@ export default StyleSheet.create({
     return { backgroundColor: colors[idx % colors.length] };
   },
   container: {
-    flex: 1,
-    justifyContent: 'center'
+    flex: 1
   },
-  mention: {
+  item: {
     padding: 10,
+    fontSize: 18,
+    height: 44
+  },
+  list: {
     alignItems: 'center'
   }
 });

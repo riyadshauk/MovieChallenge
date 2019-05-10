@@ -31,6 +31,7 @@
     "react": "16.5.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
     "react-native-elements": "^1.1.0",
+    "react-native-gifted-chat": "^0.8.0",
     "react-native-image-zoom-viewer": "^2.2.25",
     "react-native-modal": "^7.0.2",
     "react-native-read-more-text": "^1.1.0",
@@ -38,7 +39,8 @@
     "react-native-testing-library": "^1.5.0",
     "react-native-ui-kitten": "3.1.2",
     "react-navigation": "^3.1.0",
-    "react-navigation-material-bottom-tabs": "^0.3.0"
+    "react-navigation-material-bottom-tabs": "^0.3.0",
+    "socket.io-client": "^2.2.0"
   },
   "scripts": {
     "start": "expo start",
