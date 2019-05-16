@@ -1,6 +1,12 @@
 /* eslint-disable camelcase */
 import React, { Component } from 'react';
-import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import {
+  AsyncStorage,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import PropTypes from 'prop-types';
 
 import styles from './styles';
@@ -28,11 +34,16 @@ export default class ChatUserListScreen extends Component {
 
   state = {
     users: [],
-    fetchUsersRequest: undefined
+    fetchUsersRequest: undefined,
+    user_id: undefined
   };
 
   async componentDidMount() {
-    this.setState({ fetchUsersRequest: await this.fetchUsers() });
+    const { getItem } = AsyncStorage;
+    this.setState({
+      user_id: await getItem('user_id'),
+      fetchUsersRequest: await this.fetchUsers()
+    });
   }
 
   /**
@@ -70,6 +81,7 @@ export default class ChatUserListScreen extends Component {
 
   render() {
     const { navigate } = this.props.navigation;
+    const { user_id } = this.state;
     return (
       <View style={styles.container}>
         <FlatList
@@ -79,7 +91,9 @@ export default class ChatUserListScreen extends Component {
           renderItem={({ item, index }) => (
             <TouchableOpacity
               style={{ ...styles.list, ...styles.backgroundColor(index) }}
-              onPress={() => navigate('ChatDialogue', { otherUser: item.key })}
+              onPress={() =>
+                navigate('ChatDialogue', { otherUser: item.key, user_id })
+              }
             >
               <Text style={styles.item}>{item.key}</Text>
             </TouchableOpacity>

@@ -1,0 +1,24 @@
+{
+  "name": "websocket-chatserver",
+  "version": "1.0.0",
+  "description": "A simple websocket chatserver using Express + socket.io.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --experimental-modules server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "socket.io",
+    "express.js",
+    "websocket",
+    "real-time",
+    "chat"
+  ],
+  "author": "Riyad Shauk",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.16.4",
+    "socket.io": "^2.2.0"
+  }
+}

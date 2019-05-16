@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Cine: The Movie Guide",
-    "description": "Cine is your movie guide. The fastest and easiest way to find Movies, Actors and Series on your device. Know about ratings and reviews from The Movie Database (TMDb).",
-    "slug": "cine-the-movie-guide",
+    "name": "MovieClub",
+    "description": "A React Native app that interacts with the TMDb API based on cine-the-guide-movie, but with a POC gamification, integrating with Oracle Mobile Hub.",
+    "slug": "movie-club",
     "privacy": "public",
     "sdkVersion": "32.0.0",
     "platforms": ["ios", "android"],
@@ -21,6 +21,6 @@
     "ios": {
       "supportsTablet": false
     },
-    "githubUrl": "https://github.com/murillo94/cine-the-guide-movie"
+    "githubUrl": "https://github.com/riyadshauk/MovieClub"
   }
 }

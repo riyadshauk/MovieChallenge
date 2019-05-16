@@ -1,0 +1,18 @@
+{
+  "name": "movie_club",
+  "version": "1.0.0",
+  "description": "MovieClub REST API",
+  "main": "movie_club.js",
+  "oracleMobile": {
+    "dependencies": {
+      "apis": {},
+      "connectors": {}
+    }
+  },
+  "dependencies": {},
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-modules --es-module-specifier-resolution=node configure_mobile_hub_db.js # requires Node v12.0.0",
+    "zip": "npm pack && tar -xzf movie_club-1.0.0.tgz && cp config.js package && zip -r movie_club-1.0.0.zip package && rm -rf package && rm -rf movie_club-1.0.0.tgz"
+  }
+}
